@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}MoniCat Manor{% endblock %}
+
+{% block main_class %}p-0{% endblock %}
+
+{% block extra_css %}
+<style>
+    .scene-wrapper {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        max-height: 75vh;
+        background: #F3E3C9;
+        background-image: url('{% static "images/manor-scene.png" %}');
+        background-size: cover;
+        background-position: center bottom;
+        overflow: hidden;
+        border-bottom: 3px solid #C97D5D;
+    }
+    .cat-row {
+        position: absolute;
+        bottom: 4%;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-evenly;
+        align-items: flex-end;
+        padding: 0 40px;
+    }
+    .cat-sprite-wrap {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .cat-shadow {
+        width: 60px;
+        height: 14px;
+        background: rgba(61,43,31,0.25);
+        border-radius: 50%;
+        filter: blur(2px);
+        margin-top: -6px;
+    }
+    .cat-sprite {
+        width: 72px;
+        height: 72px;
+        object-fit: contain;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+    .cat-sprite:hover {
+        transform: scale(1.15) translateY(-4px);
+    }
+    .scene-actions {
+        position: absolute;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 12px;
+        z-index: 20;
+    }
+    .scene-empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 70vh;
+        flex-direction: column;
+        text-align: center;
+        color: #6b5544;
+    }
+    .scene-pagination {
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="scene-wrapper">
+        <div class="scene-actions">
+            {% if user.is_authenticated %}
+                <a href="{% url 'cat_create' %}" class="btn btn-primary">🐱 Draw a cat</a>
+            {% else %}
+                <a href="{% url 'signup' %}" class="btn btn-primary">🐱 Join to draw a cat</a>
+            {% endif %}
+            <a href="{% url 'gallery' %}" class="btn btn-light">🖼️ See gallery</a>
+        </div>
+
+        {% if cats %}
+            <div class="cat-row">
+                {% for cat in cats %}
+                    <div class="cat-sprite-wrap">
+                        <img src="{{ cat.drawing_image.url }}"
+                             alt="{{ cat.name }}"
+                             class="cat-sprite"
+                             data-name="{{ cat.name }}"
+                             data-personality="{{ cat.personality }}"
+                             data-owner="{{ cat.owner.username }}"
+                             data-url="{% url 'cat_detail' cat.pk %}">
+                        <div class="cat-shadow"></div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% if cats.has_other_pages %}
+                <div class="scene-pagination">
+                    {% if cats.has_previous %}
+                        <a href="?page={{ cats.previous_page_number }}" class="btn btn-sm btn-light">&larr; Previous</a>
+                    {% endif %}
+                    <span class="badge bg-light text-dark">Page {{ cats.number }} of {{ cats.paginator.num_pages }}</span>
+                    {% if cats.has_next %}
+                        <a href="?page={{ cats.next_page_number }}" class="btn btn-sm btn-light">Next &rarr;</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="scene-empty">
+                <p>No cats have joined the manor yet.</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'cat_create' %}" class="btn btn-primary">Draw the first cat</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="modal fade" id="catModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="catModalName"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="catModalPersonality"></p>
+                    <p class="text-muted small" id="catModalOwner"></p>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" id="catModalLink" class="btn btn-outline-secondary btn-sm">View full profile</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const catModal = new bootstrap.Modal(document.getElementById('catModal'));
+    document.querySelectorAll('.cat-sprite').forEach((sprite) => {
+        sprite.addEventListener('click', () => {
+            document.getElementById('catModalName').textContent = sprite.dataset.name;
+            document.getElementById('catModalPersonality').textContent = sprite.dataset.personality;
+            document.getElementById('catModalOwner').textContent = 'Created by ' + sprite.dataset.owner;
+            document.getElementById('catModalLink').href = sprite.dataset.url;
+            catModal.show();
+        });
+    });
+</script>
+{% endblock %}

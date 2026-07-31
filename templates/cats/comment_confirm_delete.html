@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete comment · MoniCat Manor{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-4 text-center">
+                <h1 class="h5">Delete this comment?</h1>
+                <p class="text-muted">"{{ object.body|truncatewords:15 }}"</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm me-2">Yes, delete</button>
+                    <a href="{% url 'cat_detail' object.cat.pk %}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

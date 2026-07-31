@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete cat · MoniCat Manor{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-4 text-center">
+                <h1 class="h4">Delete {{ object.name }}?</h1>
+                <p class="text-muted">This can't be undone. The drawing, comments, and reactions will all be removed.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger me-2">Yes, delete</button>
+                    <a href="{% url 'cat_detail' object.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

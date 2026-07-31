@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit your cat{% else %}Draw a cat{% endif %} · MoniCat Manor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .swatch {
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px #ccc;
+        cursor: pointer;
+        margin-right: 6px;
+    }
+    .swatch.active { box-shadow: 0 0 0 3px #3D2B1F; }
+    #catCanvas { border: 2px dashed #C97D5D; border-radius: 8px; background: #fff; touch-action: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <h1>{% if object %}Edit {{ object.name }}{% else %}Draw your cat{% endif %}</h1>
+
+            <div class="mb-3">
+                <label class="form-label d-block">Pick a coat color</label>
+                <div id="colorPalette" class="d-flex align-items-center flex-wrap">
+                    <span class="swatch active" style="background:#3D2B1F;" data-color="#3D2B1F" data-value="ink_brown"></span>
+                    <span class="swatch" style="background:#FBF3E7; box-shadow:0 0 0 1px #ccc;" data-color="#FBF3E7" data-value="cream"></span>
+                    <span class="swatch" style="background:#C97D5D;" data-color="#C97D5D" data-value="terracotta"></span>
+                    <span class="swatch" style="background:#A6543B;" data-color="#A6543B" data-value="rust"></span>
+                    <span class="swatch" style="background:#8FA07E;" data-color="#8FA07E" data-value="sage"></span>
+                    <span class="swatch" style="background:#E0A458;" data-color="#E0A458" data-value="honey"></span>
+                    <span class="swatch" style="background:#D19C97;" data-color="#D19C97" data-value="dusty_rose"></span>
+                    <span class="swatch" style="background:#111;" data-color="#111111" data-value="classic"></span>
+                </div>
+            </div>
+
+            <canvas id="catCanvas" width="400" height="400" class="mb-2"></canvas>
+            <div class="mb-4">
+                <button type="button" id="clearCanvas" class="btn btn-sm btn-outline-secondary">Clear</button>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" id="catForm">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    {{ form.name }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Personality</label>
+                    {{ form.personality }}
+                </div>
+
+                <!-- Hidden fields populated by JS before submit -->
+                <input type="hidden" name="coat_color" id="coatColorInput" value="ink_brown">
+                <input type="file" name="drawing_image" id="drawingImageInput" style="display:none;">
+
+                <div class="form-check mb-3">
+                    {{ form.is_public }}
+                    <label class="form-check-label" for="{{ form.is_public.id_for_label }}">
+                        Show this cat in the public scene and gallery
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    {% if object %}Save changes{% else %}Add to the manor{% endif %}
+                </button>
+                <a href="{% url 'my_cats' %}" class="btn btn-link">Cancel</a>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const canvas = document.getElementById('catCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    let currentColor = '#3D2B1F';
+    let currentCoatValue = 'ink_brown';
+    let drawing = false;
+
+    document.querySelectorAll('.swatch').forEach((swatch) => {
+        swatch.addEventListener('click', () => {
+            document.querySelectorAll('.swatch').forEach((s) => s.classList.remove('active'));
+            swatch.classList.add('active');
+            currentColor = swatch.dataset.color;
+            currentCoatValue = swatch.dataset.value;
+            document.getElementById('coatColorInput').value = currentCoatValue;
+        });
+    });
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const point = e.touches ? e.touches[0] : e;
+        return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+    }
+
+    function startDraw(e) {
+        drawing = true;
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+    }
+    function draw(e) {
+        if (!drawing) return;
+        const pos = getPos(e);
+        ctx.strokeStyle = currentColor;
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        e.preventDefault();
+    }
+    function stopDraw() { drawing = false; }
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDraw);
+    canvas.addEventListener('mouseleave', stopDraw);
+    canvas.addEventListener('touchstart', startDraw);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', stopDraw);
+
+    document.getElementById('clearCanvas').addEventListener('click', () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // Convert the canvas drawing to a file and attach it before submitting
+    document.getElementById('catForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        canvas.toBlob((blob) => {
+            const file = new File([blob], 'cat-drawing.png', { type: 'image/png' });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            document.getElementById('drawingImageInput').files = dataTransfer.files;
+            this.submit();
+        });
+    });
+</script>
+{% endblock %}

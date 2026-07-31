@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Gallery · MoniCat Manor{% endblock %}
+
+{% block content %}
+    <h1>Gallery</h1>
+
+    {% if cats %}
+        <div class="row g-4 mt-2">
+            {% for cat in cats %}
+                <div class="col-md-4 col-lg-3">
+                    <div class="card h-100">
+                        <img src="{{ cat.drawing_image.url }}" class="card-img-top" alt="{{ cat.name }}"
+                             style="height: 180px; object-fit: cover; border-radius: 12px 12px 0 0;">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ cat.name }}</h5>
+                            <p class="card-text text-muted small">{{ cat.personality|truncatewords:12 }}</p>
+                            <a href="{% url 'cat_detail' cat.pk %}" class="btn btn-sm btn-outline-secondary">View profile</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if is_paginated %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+                    {% endif %}
+                    <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <p class="text-muted">No cats to show yet.</p>
+    {% endif %}
+{% endblock %}

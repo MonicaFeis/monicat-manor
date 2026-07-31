@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}My cats · MoniCat Manor{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>My cats</h1>
+        <a href="{% url 'cat_create' %}" class="btn btn-primary">Draw a cat</a>
+    </div>
+
+    {% if cats %}
+        <div class="row g-4">
+            {% for cat in cats %}
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <img src="{{ cat.drawing_image.url }}" class="card-img-top" alt="{{ cat.name }}"
+                             style="height: 180px; object-fit: cover; border-radius: 12px 12px 0 0;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="card-title">{{ cat.name }}</h5>
+                                {% if cat.is_public %}
+                                    <span class="badge badge-public">Public</span>
+                                {% else %}
+                                    <span class="badge badge-private">Private</span>
+                                {% endif %}
+                            </div>
+                            <p class="card-text text-muted small">{{ cat.personality|truncatewords:12 }}</p>
+                            <a href="{% url 'cat_detail' cat.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                            <a href="{% url 'cat_update' cat.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <p class="text-muted">You haven't drawn any cats yet.</p>
+            <a href="{% url 'cat_create' %}" class="btn btn-primary">Draw your first cat</a>
+        </div>
+    {% endif %}
+{% endblock %}
