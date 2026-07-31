@@ -30,7 +30,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-pn1na@9g_e@(*gmylj3&6
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+# Safe fallback for Heroku hostnames
+ALLOWED_HOSTS = os.environ.get(
+    'ALLOWED_HOSTS',
+    'monicat-manor-8f86a39892eb.herokuapp.com,.herokuapp.com,localhost,127.0.0.1'
+).split(',')
 
 
 # Application definition
@@ -49,7 +53,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise added right after SecurityMiddleware
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise serving static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -123,19 +127,18 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 if (BASE_DIR / 'static').exists():
     STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# Explicitly use standard Django storage for static files so WhiteNoise handles them,
-# preventing Cloudinary from interceding during collectstatic.
+# Configure WhiteNoise to handle static assets and Cloudinary to handle media user uploads
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
