@@ -1,6 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.paginator import Paginator
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (
@@ -8,16 +10,22 @@ from django.views.generic import (
 )
 from .models import Cat, Comment, Reaction
 
+CATS_PER_SCENE = 10
+
 
 # ---------- The shared scene (homepage) ----------
 
 class SceneView(TemplateView):
-    """The homepage: an illustrated scene populated with all public cats."""
+    """The homepage: an illustrated scene populated with public cats,
+    shown 10 at a time standing along the same background."""
     template_name = 'cats/scene.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['cats'] = Cat.objects.filter(is_public=True)
+        all_cats = Cat.objects.filter(is_public=True)
+        paginator = Paginator(all_cats, CATS_PER_SCENE)
+        page_number = self.request.GET.get('page', 1)
+        context['cats'] = paginator.get_page(page_number)
         return context
 
 
@@ -136,9 +144,18 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 def toggle_reaction(request, pk):
     cat = get_object_or_404(Cat, pk=pk, is_public=True)
     reaction, created = Reaction.objects.get_or_create(cat=cat, user=request.user)
+    reacted = True
     if not created:
         reaction.delete()
+        reacted = False
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'reacted': reacted,
+            'count': cat.reactions.count(),
+        })
     return redirect('cat_detail', pk=cat.pk)
+
 
 # ---------- Sign up ----------
 
