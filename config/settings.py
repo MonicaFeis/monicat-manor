@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'cloudinary_storage',         # Must be placed BEFORE staticfiles
+    'cloudinary_storage',
     'django.contrib.staticfiles',
     'cloudinary',
     'cats',
@@ -125,17 +125,17 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Only include static dir if it exists locally to avoid collectstatic warnings
 if (BASE_DIR / 'static').exists():
     STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# Set static storage explicitly so WhiteNoise doesn't conflict with Cloudinary
+# Explicitly use standard Django storage for static files so WhiteNoise handles them,
+# preventing Cloudinary from interceding during collectstatic.
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
