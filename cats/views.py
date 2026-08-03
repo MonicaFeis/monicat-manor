@@ -2,13 +2,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import Paginator
+from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.views.generic import (
     ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 )
-from .models import Cat, Comment, Reaction
+from .models import Cat, Comment, Reaction, DailyPet
 
 CATS_PER_SCENE = 10
 
@@ -22,10 +24,29 @@ class SceneView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        all_cats = Cat.objects.filter(is_public=True)
+        today = timezone.localdate()
+
+        all_cats = Cat.objects.filter(is_public=True).annotate(
+            today_pet_count=Count('pets', filter=Q(pets__date=today))
+        )
+
         paginator = Paginator(all_cats, CATS_PER_SCENE)
         page_number = self.request.GET.get('page', 1)
         context['cats'] = paginator.get_page(page_number)
+
+        cat_of_the_day = all_cats.filter(today_pet_count__gt=0).order_by(
+            '-today_pet_count', '?'
+        ).first()
+        context['cat_of_the_day'] = cat_of_the_day
+
+        if self.request.user.is_authenticated:
+            petted_ids = DailyPet.objects.filter(
+                user=self.request.user, date=today
+            ).values_list('cat_id', flat=True)
+            context['petted_cat_ids'] = list(petted_ids)
+        else:
+            context['petted_cat_ids'] = []
+
         return context
 
 
@@ -153,6 +174,25 @@ def toggle_reaction(request, pk):
         return JsonResponse({
             'reacted': reacted,
             'count': cat.reactions.count(),
+        })
+    return redirect('cat_detail', pk=cat.pk)
+
+
+# ---------- Daily petting (Cat of the Day) ----------
+
+@login_required
+def pet_cat(request, pk):
+    cat = get_object_or_404(Cat, pk=pk, is_public=True)
+    today = timezone.localdate()
+    pet, created = DailyPet.objects.get_or_create(cat=cat, user=request.user, date=today)
+
+    today_count = cat.pets.filter(date=today).count()
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'petted_today': True,
+            'already_petted': not created,
+            'today_count': today_count,
         })
     return redirect('cat_detail', pk=cat.pk)
 

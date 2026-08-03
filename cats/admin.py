@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cat, Comment, Reaction
+from .models import Cat, Comment, Reaction, DailyPet
 
 
 @admin.register(Cat)
@@ -20,3 +20,9 @@ class CommentAdmin(admin.ModelAdmin):
 @admin.register(Reaction)
 class ReactionAdmin(admin.ModelAdmin):
     list_display = ('cat', 'user', 'created_on')
+
+
+@admin.register(DailyPet)
+class DailyPetAdmin(admin.ModelAdmin):
+    list_display = ('cat', 'user', 'date')
+    list_filter = ('date',)

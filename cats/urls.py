@@ -16,6 +16,6 @@ urlpatterns = [
     path('comment/<int:pk>/delete/', views.CommentDeleteView.as_view(), name='comment_delete'),
 
     path('cat/<int:pk>/react/', views.toggle_reaction, name='cat_react'),
-
+    path('cat/<int:pk>/pet/', views.pet_cat, name='cat_pet'),
     path('accounts/signup/', views.SignUpView.as_view(), name='signup'),
 ]

@@ -1,9 +1,6 @@
 from django.db import models
-
-# Create your models here.
-
-from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 COAT_COLOR_CHOICES = [
@@ -19,6 +16,8 @@ COAT_COLOR_CHOICES = [
 
 
 class Cat(models.Model):
+    """A single cat portrait created by a user."""
+
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cats')
     name = models.CharField(max_length=50)
     personality = models.TextField(max_length=300)
@@ -36,6 +35,8 @@ class Cat(models.Model):
 
 
 class Comment(models.Model):
+    """A comment left on a public cat."""
+
     cat = models.ForeignKey(Cat, on_delete=models.CASCADE, related_name='comments')
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
     body = models.TextField(max_length=500)
@@ -49,6 +50,8 @@ class Comment(models.Model):
 
 
 class Reaction(models.Model):
+    """A lightweight 'paw'/like on a cat. One per user per cat, permanent."""
+
     cat = models.ForeignKey(Cat, on_delete=models.CASCADE, related_name='reactions')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reactions')
     created_on = models.DateTimeField(auto_now_add=True)
@@ -58,3 +61,18 @@ class Reaction(models.Model):
 
     def __str__(self):
         return f"{self.user.username} reacted to {self.cat.name}"
+
+
+class DailyPet(models.Model):
+    """A daily 'pet' on a cat - resets every day, powers the Cat of the Day
+    spotlight and gives users a reason to return."""
+
+    cat = models.ForeignKey(Cat, on_delete=models.CASCADE, related_name='pets')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_pets')
+    date = models.DateField(default=timezone.localdate)
+
+    class Meta:
+        unique_together = ('cat', 'user', 'date')
+
+    def __str__(self):
+        return f"{self.user.username} petted {self.cat.name} on {self.date}"
