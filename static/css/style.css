@@ -70,6 +70,18 @@ h1, h2, h3, h4, h5 {
     color: #4b1f1a;
 }
 
+button.badge {
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.75rem;
+    line-height: 1;
+    transition: opacity 0.15s ease;
+}
+
+button.badge:hover {
+    opacity: 0.8;
+}
+
 /* ============================================
    Scene page (homepage)
    ============================================ */

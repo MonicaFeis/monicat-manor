@@ -124,6 +124,14 @@ class CatDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return self.get_object().owner == self.request.user
 
 
+@login_required
+def toggle_visibility(request, pk):
+    cat = get_object_or_404(Cat, pk=pk, owner=request.user)
+    cat.is_public = not cat.is_public
+    cat.save()
+    return redirect('my_cats')
+
+
 # ---------- Comments ----------
 
 @login_required

@@ -17,16 +17,26 @@
                              style="height: 180px; object-fit: cover; border-radius: 12px 12px 0 0;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start">
-                                <h5 class="card-title">{{ cat.name }}</h5>
-                                {% if cat.is_public %}
-                                    <span class="badge badge-public">Public</span>
-                                {% else %}
-                                    <span class="badge badge-private">Private</span>
-                                {% endif %}
+                                <h5 class="card-title mb-0">{{ cat.name }}</h5>
+                                <form method="post" action="{% url 'cat_toggle_visibility' cat.pk %}">
+                                    {% csrf_token %}
+                                    {% if cat.is_public %}
+                                        <button type="submit" class="badge badge-public border-0" title="Click to hide from the manor">
+                                            👁️ Public
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="badge badge-private border-0" title="Click to show in the manor">
+                                            🙈 Private
+                                        </button>
+                                    {% endif %}
+                                </form>
                             </div>
-                            <p class="card-text text-muted small">{{ cat.personality|truncatewords:12 }}</p>
-                            <a href="{% url 'cat_detail' cat.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
-                            <a href="{% url 'cat_update' cat.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <p class="card-text text-muted small mt-2">{{ cat.personality|truncatewords:12 }}</p>
+                            <div class="d-flex gap-1 flex-wrap">
+                                <a href="{% url 'cat_detail' cat.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                                <a href="{% url 'cat_update' cat.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <a href="{% url 'cat_delete' cat.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                            </div>
                         </div>
                     </div>
                 </div>
