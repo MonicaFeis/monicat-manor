@@ -44,9 +44,13 @@
                 </div>
             </div>
 
-            <canvas id="catCanvas" width="400" height="400" class="mb-2"></canvas>
+            <canvas id="catCanvas" width="400" height="400" class="mb-2"
+                    {% if object %}data-existing-image="{{ object.drawing_image.url }}" data-existing-color="{{ object.coat_color }}"{% endif %}></canvas>
             <div class="mb-4">
                 <button type="button" id="clearCanvas" class="btn btn-sm btn-outline-secondary">Clear</button>
+                {% if object %}
+                    <span class="text-muted small ms-2">Your existing drawing is loaded — draw on top, or Clear to start fresh</span>
+                {% endif %}
             </div>
 
             <form method="post" enctype="multipart/form-data" id="catForm">
@@ -92,6 +96,18 @@
     let currentCoatValue = 'ink_brown';
     let drawing = false;
 
+    // If editing an existing cat, load its current drawing onto the
+    // canvas first so submitting without redrawing doesn't wipe it out
+    const existingImageUrl = canvas.dataset.existingImage;
+    if (existingImageUrl) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+        img.src = existingImageUrl;
+    }
+
     document.querySelectorAll('.swatch').forEach((swatch) => {
         swatch.addEventListener('click', () => {
             document.querySelectorAll('.swatch').forEach((s) => s.classList.remove('active'));
@@ -101,6 +117,13 @@
             document.getElementById('coatColorInput').value = currentCoatValue;
         });
     });
+
+    // On edit, pre-select the swatch matching this cat's saved coat color
+    const existingColor = canvas.dataset.existingColor;
+    if (existingColor) {
+        const matchingSwatch = document.querySelector(`.swatch[data-value="${existingColor}"]`);
+        if (matchingSwatch) matchingSwatch.click();
+    }
 
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
