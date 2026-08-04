@@ -13,13 +13,21 @@
         margin-right: 6px;
     }
     .swatch.active { box-shadow: 0 0 0 3px #3D2B1F; }
-    #catCanvas { border: 2px dashed #C97D5D; border-radius: 8px; background: #fff; touch-action: none; }
+    #catCanvas {
+        border: 2px dashed #C97D5D;
+        border-radius: 8px;
+        background: #fff;
+        touch-action: none;
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
     <div class="row justify-content-center">
-        <div class="col-md-7">
+        <div class="col-12 col-md-7">
             <h1>{% if object %}Edit {{ object.name }}{% else %}Draw your cat{% endif %}</h1>
 
             <div class="mb-3">
@@ -97,7 +105,14 @@
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
         const point = e.touches ? e.touches[0] : e;
-        return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+        // Scale factor accounts for the canvas being displayed smaller
+        // than its internal 400x400 resolution on narrow screens
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+            x: (point.clientX - rect.left) * scaleX,
+            y: (point.clientY - rect.top) * scaleY,
+        };
     }
 
     function startDraw(e) {
