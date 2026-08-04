@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Something went wrong · MoniCat Manor{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center text-center">
+        <div class="col-md-6 py-5">
+            <div style="font-size: 4rem;">🙀</div>
+            <h1>Something startled the cats</h1>
+            <p class="text-muted">
+                Something went wrong on our end. It's not you — try heading
+                back to the manor, and if it keeps happening, let us know.
+            </p>
+            <a href="{% url 'scene' %}" class="btn btn-primary mt-2">🏡 Back to the Manor</a>
+        </div>
+    </div>
+{% endblock %}
