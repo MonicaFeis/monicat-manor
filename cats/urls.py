@@ -19,4 +19,6 @@ urlpatterns = [
     path('cat/<int:pk>/react/', views.toggle_reaction, name='cat_react'),
     path('cat/<int:pk>/pet/', views.pet_cat, name='cat_pet'),
     path('accounts/signup/', views.SignUpView.as_view(), name='signup'),
+
+    path('test-error/', views.trigger_test_error, name='test_error'),
 ]
