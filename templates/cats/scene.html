@@ -25,6 +25,19 @@
     .scene-bg.time-night {
         background-image: url('{% static "images/manor-scene-night.png" %}');
     }
+
+    .float-pop {
+        position: fixed;
+        pointer-events: none;
+        font-size: 1.4rem;
+        z-index: 3000;
+        animation: floatUp 0.9s ease-out forwards;
+    }
+    @keyframes floatUp {
+        0% { transform: translateY(0) scale(0.8); opacity: 1; }
+        70% { opacity: 1; }
+        100% { transform: translateY(-40px) scale(1.3); opacity: 0; }
+    }
 </style>
 {% endblock %}
 
@@ -46,6 +59,8 @@
                          data-personality="{{ cat.personality }}"
                          data-owner="{{ cat.owner.username }}"
                          data-url="{% url 'cat_detail' cat.pk %}"
+                         data-edit-url="{% url 'cat_update' cat.pk %}"
+                         data-delete-url="{% url 'cat_delete' cat.pk %}"
                          data-react-url="{% url 'cat_react' cat.pk %}"
                          data-pet-url="{% url 'cat_pet' cat.pk %}"
                          data-count="{{ cat.reactions.count }}"
@@ -108,14 +123,18 @@
                 </div>
                 <div class="modal-body">
                     <p id="catModalPersonality"></p>
-                    <p class="text-muted small" id="catModalOwner"></p>
+                    <p class="text-muted small mb-0" id="catModalOwner"></p>
+                    <div id="catModalOwnerActions" class="mt-2" style="display:none;">
+                        <a href="#" id="catModalEditLink" class="btn btn-sm btn-outline-secondary">✏️ Edit</a>
+                        <a href="#" id="catModalDeleteLink" class="btn btn-sm btn-outline-danger">🗑️ Delete</a>
+                    </div>
                 </div>
                 <div class="modal-footer flex-wrap">
                     {% if user.is_authenticated %}
-                        <button type="button" id="catModalPaw" class="btn btn-outline-secondary btn-sm paw-btn">
+                        <button type="button" id="catModalPaw" class="btn btn-outline-secondary btn-sm paw-btn position-relative">
                             🐾 <span id="catModalPawCount">0</span>
                         </button>
-                        <button type="button" id="catModalPet" class="btn btn-outline-secondary btn-sm pet-btn">
+                        <button type="button" id="catModalPet" class="btn btn-outline-secondary btn-sm pet-btn position-relative">
                             💗 Pet me
                         </button>
                     {% else %}
@@ -148,6 +167,7 @@
 
     const catModal = new bootstrap.Modal(document.getElementById('catModal'));
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const currentUsername = '{{ user.username|escapejs }}';
     let activeReactUrl = null;
     let activePetUrl = null;
 
@@ -157,6 +177,19 @@
     function pickEmoji(list, seed) {
         const index = seed.length % list.length;
         return list[index];
+    }
+
+    // Shows a small emoji that floats up and fades out from a button,
+    // giving instant visual feedback on paw/pet actions
+    function floatEmojiFrom(button, emoji) {
+        const rect = button.getBoundingClientRect();
+        const pop = document.createElement('span');
+        pop.className = 'float-pop';
+        pop.textContent = emoji;
+        pop.style.left = (rect.left + rect.width / 2 - 10) + 'px';
+        pop.style.top = rect.top + 'px';
+        document.body.appendChild(pop);
+        setTimeout(() => pop.remove(), 900);
     }
 
     document.querySelectorAll('.cat-sprite-wrap').forEach((wrap) => {
@@ -170,6 +203,15 @@
                 pickEmoji(moodEmojis, personality) + ' ' + personality;
             document.getElementById('catModalOwner').textContent = 'Created by ' + wrap.dataset.owner;
             document.getElementById('catModalLink').href = wrap.dataset.url;
+
+            const ownerActions = document.getElementById('catModalOwnerActions');
+            if (currentUsername && wrap.dataset.owner === currentUsername) {
+                document.getElementById('catModalEditLink').href = wrap.dataset.editUrl;
+                document.getElementById('catModalDeleteLink').href = wrap.dataset.deleteUrl;
+                ownerActions.style.display = 'block';
+            } else {
+                ownerActions.style.display = 'none';
+            }
 
             activeReactUrl = wrap.dataset.reactUrl;
             activePetUrl = wrap.dataset.petUrl;
@@ -206,6 +248,7 @@
                 .then((data) => {
                     document.getElementById('catModalPawCount').textContent = data.count;
                     pawBtn.classList.toggle('reacted', data.reacted);
+                    if (data.reacted) floatEmojiFrom(pawBtn, '🐾');
                 });
         });
     }
@@ -226,6 +269,7 @@
                     petBtn.disabled = true;
                     petBtn.classList.add('petted');
                     petBtn.textContent = '💗 Petted today';
+                    floatEmojiFrom(petBtn, '💗');
                 });
         });
     }
