@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if object %}Edit your cat{% else %}Draw a cat{% endif %} · MoniCat Manor{% endblock %}
+{% block title %}{% if object %}Edit your cat{% else %}Create a cat{% endif %} · MoniCat Manor{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -28,7 +28,7 @@
 {% block content %}
     <div class="row justify-content-center">
         <div class="col-12 col-md-7">
-            <h1>{% if object %}Edit {{ object.name }}{% else %}Draw your cat{% endif %}</h1>
+            <h1>{% if object %}Edit {{ object.name }}{% else %}Create your cat{% endif %}</h1>
 
             <div class="mb-3">
                 <label class="form-label d-block">Pick a coat color</label>
@@ -47,6 +47,7 @@
             <canvas id="catCanvas" width="400" height="400" class="mb-2"
                     {% if object %}data-existing-image="{{ object.drawing_image.url }}" data-existing-color="{{ object.coat_color }}"{% endif %}></canvas>
             <div class="mb-4">
+                <button type="button" id="undoStroke" class="btn btn-sm btn-outline-secondary" disabled>↩️ Undo</button>
                 <button type="button" id="clearCanvas" class="btn btn-sm btn-outline-secondary">Clear</button>
                 {% if object %}
                     <span class="text-muted small ms-2">Your existing drawing is loaded — draw on top, or Clear to start fresh</span>
@@ -96,6 +97,25 @@
     let currentCoatValue = 'ink_brown';
     let drawing = false;
 
+    // Undo history: snapshot the canvas before each new stroke so a
+    // single mistake can be stepped back without clearing everything
+    const undoStack = [];
+    const MAX_UNDO_STEPS = 20;
+    const undoBtn = document.getElementById('undoStroke');
+
+    function saveUndoState() {
+        undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+        if (undoStack.length > MAX_UNDO_STEPS) undoStack.shift();
+        undoBtn.disabled = false;
+    }
+
+    undoBtn.addEventListener('click', () => {
+        if (undoStack.length === 0) return;
+        const previousState = undoStack.pop();
+        ctx.putImageData(previousState, 0, 0);
+        if (undoStack.length === 0) undoBtn.disabled = true;
+    });
+
     // If editing an existing cat, load its current drawing onto the
     // canvas first so submitting without redrawing doesn't wipe it out
     const existingImageUrl = canvas.dataset.existingImage;
@@ -104,8 +124,13 @@
         img.crossOrigin = 'anonymous';
         img.onload = () => {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            saveUndoState(); // baseline state to undo back to
+            undoBtn.disabled = true; // nothing to undo until they draw something new
         };
         img.src = existingImageUrl;
+    } else {
+        saveUndoState(); // blank baseline for a brand new cat
+        undoBtn.disabled = true;
     }
 
     document.querySelectorAll('.swatch').forEach((swatch) => {
@@ -140,6 +165,7 @@
 
     function startDraw(e) {
         drawing = true;
+        saveUndoState();
         const pos = getPos(e);
         ctx.beginPath();
         ctx.moveTo(pos.x, pos.y);
@@ -163,6 +189,7 @@
     canvas.addEventListener('touchend', stopDraw);
 
     document.getElementById('clearCanvas').addEventListener('click', () => {
+        saveUndoState(); // let Clear itself be undoable too
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 

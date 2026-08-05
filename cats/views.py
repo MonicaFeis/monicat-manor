@@ -12,7 +12,7 @@ from django.views.generic import (
 )
 from .models import Cat, Comment, Reaction, DailyPet
 
-CATS_PER_SCENE = 10
+CATS_PER_SCENE = 8
 
 
 # ---------- The shared scene (homepage) ----------
@@ -211,9 +211,3 @@ class SignUpView(CreateView):
     form_class = UserCreationForm
     template_name = 'registration/signup.html'
     success_url = reverse_lazy('login')
-
-
-## ---------- 500 Error ----------
-
-def trigger_test_error(request):
-    raise Exception("Testing the 500 error page")

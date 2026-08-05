@@ -144,6 +144,14 @@ button.badge:hover {
     justify-content: space-evenly;
     align-items: flex-end;
     padding: 0 40px;
+    gap: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.cat-row::-webkit-scrollbar {
+    display: none;
 }
 
 .cat-sprite-wrap {
@@ -153,6 +161,7 @@ button.badge:hover {
     align-items: center;
     cursor: pointer;
     transition: transform 0.2s ease;
+    flex-shrink: 0;
 }
 
 .cat-sprite-wrap:hover {
@@ -200,50 +209,46 @@ button.badge:hover {
 .scene-toolbar {
     display: flex;
     justify-content: center;
-    gap: 28px;
-    padding: 18px 0;
+    gap: 14px;
+    padding: 18px 16px;
     background: #F5F0FA;
+    flex-wrap: wrap;
 }
 
 .icon-btn {
     display: flex;
-    flex-direction: column;
     align-items: center;
+    gap: 8px;
     text-decoration: none;
-    gap: 4px;
-}
-
-.icon-btn-circle {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.6rem;
+    padding: 10px 20px;
+    border-radius: 999px;
     background: #F6D983;
     box-shadow: 0 2px 6px rgba(80, 70, 140, 0.2);
     transition: transform 0.15s ease;
-}
-
-.icon-btn:hover .icon-btn-circle {
-    transform: scale(1.08);
-}
-
-.icon-btn.secondary .icon-btn-circle {
-    background: #E5DEF5;
-}
-
-.icon-btn-label {
-    font-size: 0.75rem;
     font-weight: 600;
+    font-size: 0.9rem;
+    color: #3D2B1F;
+}
+
+.icon-btn:hover {
+    transform: translateY(-2px);
+    color: #3D2B1F;
+}
+
+.icon-btn.secondary {
+    background: #E5DEF5;
     color: #5A5FA8;
 }
 
+.icon-btn-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
 .paw-btn.reacted {
-    background: #E0A458;
-    border-color: #E0A458;
-    color: #3D2B1F;
+    background: #C9BEE8;
+    border-color: #C9BEE8;
+    color: #2E2A4D;
 }
 
 .pet-btn.petted {
@@ -263,25 +268,22 @@ button.badge:hover {
     .cat-row {
         padding: 0 12px;
         bottom: 3%;
+        justify-content: flex-start;
     }
     .cat-sprite {
-        width: 56px;
-        height: 56px;
+        width: 60px;
+        height: 60px;
     }
     .crown-badge {
         font-size: 1.1rem;
         top: -10px;
     }
     .scene-toolbar {
-        gap: 16px;
+        gap: 10px;
     }
-    .icon-btn-circle {
-        width: 46px;
-        height: 46px;
-        font-size: 1.3rem;
-    }
-    .icon-btn-label {
-        font-size: 0.7rem;
+    .icon-btn {
+        padding: 8px 16px;
+        font-size: 0.82rem;
     }
     .spotlight-banner {
         font-size: 0.8rem;

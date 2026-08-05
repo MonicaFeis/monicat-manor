@@ -88,7 +88,7 @@
             <div class="scene-empty">
                 <p>No cats have joined the manor yet.</p>
                 {% if user.is_authenticated %}
-                    <a href="{% url 'cat_create' %}" class="btn btn-primary">Draw the first cat</a>
+                    <a href="{% url 'cat_create' %}" class="btn btn-primary">Create the first cat</a>
                 {% endif %}
             </div>
         {% endif %}
@@ -97,18 +97,18 @@
     <div class="scene-toolbar">
         {% if user.is_authenticated %}
             <a href="{% url 'cat_create' %}" class="icon-btn">
-                <span class="icon-btn-circle">🐱</span>
-                <span class="icon-btn-label">Draw a cat</span>
+                <span class="icon-btn-icon">🐱</span>
+                <span>Create a cat</span>
             </a>
         {% else %}
             <a href="{% url 'signup' %}" class="icon-btn">
-                <span class="icon-btn-circle">🐱</span>
-                <span class="icon-btn-label">Join in</span>
+                <span class="icon-btn-icon">🐱</span>
+                <span>Join in</span>
             </a>
         {% endif %}
         <a href="{% url 'gallery' %}" class="icon-btn secondary">
-            <span class="icon-btn-circle">🖼️</span>
-            <span class="icon-btn-label">Gallery</span>
+            <span class="icon-btn-icon">🖼️</span>
+            <span>Gallery</span>
         </a>
     </div>
 
@@ -131,17 +131,20 @@
                 </div>
                 <div class="modal-footer flex-wrap">
                     {% if user.is_authenticated %}
-                        <button type="button" id="catModalPaw" class="btn btn-outline-secondary btn-sm paw-btn position-relative">
-                            🐾 <span id="catModalPawCount">0</span>
+                        <button type="button" id="catModalPaw" class="btn btn-outline-secondary btn-sm paw-btn position-relative" title="A permanent favorite - never resets">
+                            🐾 Favorite (<span id="catModalPawCount">0</span>)
                         </button>
-                        <button type="button" id="catModalPet" class="btn btn-outline-secondary btn-sm pet-btn position-relative">
-                            💗 Pet me
+                        <button type="button" id="catModalPet" class="btn btn-outline-secondary btn-sm pet-btn position-relative" title="Counts toward today's Cat of the Day - resets tomorrow">
+                            💗 Pet today
                         </button>
                     {% else %}
                         <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm">Log in to react</a>
                     {% endif %}
                     <a href="#" id="catModalLink" class="btn btn-outline-secondary btn-sm">View full profile</a>
                 </div>
+                {% if user.is_authenticated %}
+                    <p class="text-muted small text-center mb-2">🐾 Favorite lasts forever · 💗 Pet counts toward today's Cat of the Day only</p>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -226,7 +229,7 @@
                 const alreadyPetted = wrap.dataset.petted === 'true';
                 petBtn.disabled = alreadyPetted;
                 petBtn.classList.toggle('petted', alreadyPetted);
-                petBtn.textContent = alreadyPetted ? '💗 Petted today' : '💗 Pet me';
+                petBtn.textContent = alreadyPetted ? '💗 Petted today' : '💗 Pet today';
             }
 
             catModal.show();
@@ -274,4 +277,4 @@
         });
     }
 </script>
-{% endblock %}
+{% endblock %}s
