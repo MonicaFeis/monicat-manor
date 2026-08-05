@@ -9,7 +9,10 @@
         <div class="row g-4 mt-2">
             {% for cat in cats %}
                 <div class="col-6 col-md-4 col-lg-3">
-                    <div class="card h-100">
+                    <div class="card h-100 position-relative">
+                        {% if cat_of_the_day and cat.pk == cat_of_the_day.pk %}
+                            <span class="gallery-crown" title="Cat of the Day">👑</span>
+                        {% endif %}
                         <img src="{{ cat.drawing_image.url }}" class="card-img-top" alt="{{ cat.name }}"
                              style="height: 180px; object-fit: cover; border-radius: 12px 12px 0 0;">
                         <div class="card-body">

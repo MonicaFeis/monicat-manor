@@ -61,6 +61,15 @@ class GalleryView(ListView):
     def get_queryset(self):
         return Cat.objects.filter(is_public=True)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.localdate()
+        cat_of_the_day = Cat.objects.filter(is_public=True).annotate(
+            today_pet_count=Count('pets', filter=Q(pets__date=today))
+        ).filter(today_pet_count__gt=0).order_by('-today_pet_count', '?').first()
+        context['cat_of_the_day'] = cat_of_the_day
+        return context
+
 
 # ---------- My Cats (personal collection) ----------
 
