@@ -5,7 +5,7 @@
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>My cats</h1>
-        <a href="{% url 'cat_create' %}" class="btn btn-primary">Draw a cat</a>
+        <a href="{% url 'cat_create' %}" class="btn btn-primary">Create a cat</a>
     </div>
 
     {% if cats %}
@@ -44,8 +44,10 @@
         </div>
     {% else %}
         <div class="text-center py-5">
-            <p class="text-muted">You haven't drawn any cats yet.</p>
-            <a href="{% url 'cat_create' %}" class="btn btn-primary">Draw your first cat</a>
+            <p class="text-muted">You haven't created any cats yet.</p>
+            <a href="{% url 'cat_create' %}" class="btn btn-primary">Create your first cat</a>
         </div>
     {% endif %}
+
+    <a href="{% url 'scene' %}" class="btn btn-link mt-3">&larr; Back to the manor</a>
 {% endblock %}
