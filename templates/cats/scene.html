@@ -1,153 +1,119 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}The Manor · MoniCat Manor{% endblock %}
+{% block title %}The Manor Scene · MoniCat Manor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .scene-viewport {
+        position: relative;
+        width: 100%;
+        min-height: 520px;
+        border-radius: 16px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        border: 2px solid var(--soft-lavender, #E2E8F0);
+        box-shadow: inset 0 0 20px rgba(42, 59, 143, 0.05);
+        background-color: #F0F2FB;
+        background-image: url("{% static 'images/manor-bg.png' %}");
+        background-size: cover;
+        background-position: center bottom;
+        background-repeat: no-repeat;
+    }
+
+    .scene-content {
+        position: relative;
+        min-width: 900px;
+        height: 520px;
+    }
+
+    .cat-avatar {
+        position: absolute;
+        bottom: 40px;
+        width: 90px;
+        height: 90px;
+        object-fit: contain;
+        transition: transform 0.2s ease;
+        cursor: pointer;
+    }
+
+    .cat-avatar:hover {
+        transform: scale(1.15) translateY(-5px);
+    }
+
+    .hint-bar {
+        color: var(--deep-blue, #2A3B8F);
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-    <!-- Spotlight Banner -->
-    {% if cat_of_the_day %}
-        <div class="spotlight-banner">
-            ✨ Cat of the Day: <strong>{{ cat_of_the_day.name }}</strong> with {{ cat_of_the_day.today_pet_count }} pet{{ cat_of_the_day.today_pet_count|pluralize }} today!
-        </div>
-    {% endif %}
-
-    <!-- Main Scene Canvas Area -->
-    <div class="scene-wrapper">
-        <div class="scene-bg time-day"></div>
-
-        {% if cats %}
-            <div class="cat-row">
-                {% for cat in cats %}
-                    <div class="cat-sprite-wrap" 
-                         data-bs-toggle="modal" 
-                         data-bs-target="#catModal"
-                         data-cat-id="{{ cat.pk }}"
-                         data-cat-name="{{ cat.name }}"
-                         data-cat-personality="{{ cat.personality|default:'A mysterious resident.' }}"
-                         data-cat-owner="{{ cat.owner.username }}"
-                         data-cat-image="{{ cat.drawing_image.url }}"
-                         data-cat-petted="{% if cat.pk in petted_cat_ids %}true{% else %}false{% endif %}"
-                         data-cat-favorited="{% if cat.pk in favorited_cat_ids %}true{% else %}false{% endif %}">
-                        
-                        {% if cat == cat_of_the_day %}
-                            <span class="crown-badge" title="Cat of the Day">👑</span>
-                        {% endif %}
-                        
-                        <img src="{{ cat.drawing_image.url }}" alt="{{ cat.name }}" class="cat-sprite">
-                    </div>
-                {% endfor %}
-            </div>
-            <div class="scroll-hint">↔ Scroll to see more cats</div>
-        {% else %}
-            <div class="scene-empty">
-                <h3>The Manor is quiet today...</h3>
-                <p class="text-muted">No public cats are wandering around right now.</p>
-            </div>
-        {% endif %}
+<div class="container-fluid px-3 py-2">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="hint-bar">↔ Scroll to see more cats</span>
     </div>
 
-    <!-- Scene Pagination -->
-    {% if cats.has_other_pages %}
-        <div class="scene-pagination-bar">
-            {% if cats.has_previous %}
-                <a href="?page={{ cats.previous_page_number }}" class="pagination-pill">← Previous</a>
-            {% endif %}
-            
-            <span class="pagination-current">Page {{ cats.number }} of {{ cats.paginator.num_pages }}</span>
-            
-            {% if cats.has_next %}
-                <a href="?page={{ cats.next_page_number }}" class="pagination-pill">Next →</a>
+    <!-- Main Dynamic Scene Container -->
+    <div class="scene-viewport mb-4">
+        <div class="scene-content" id="sceneContent">
+            {% if cats %}
+                {% for cat in cats %}
+                    {% if cat.drawing_image %}
+                        <img src="{{ cat.drawing_image.url }}" 
+                             alt="{{ cat.name }}" 
+                             class="cat-avatar"
+                             title="{{ cat.name }} ({% if cat.personality %}{{ cat.personality }}{% else %}Cozy Manor Resident{% endif %})">
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <!-- Default Placeholder Cats if database is empty -->
+                <div class="d-flex align-items-end justify-content-around h-100 pb-5">
+                    <span class="fs-1" title="Welcome Cat">🐱</span>
+                    <span class="fs-1" title="Manor Guard">😸</span>
+                    <span class="fs-1" title="Sleepy Resident">😻</span>
+                </div>
             {% endif %}
         </div>
-    {% endif %}
+    </div>
 
-    <!-- Dynamic Toolbar: Auth vs Guest -->
-    <div class="scene-toolbar">
+    <!-- Navigation Action Bar -->
+    <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
         {% if user.is_authenticated %}
-            <a href="{% url 'cat_create' %}" class="icon-btn">
-                🐱 Draw a Cat
-            </a>
-            <a href="{% url 'gallery' %}" class="icon-btn secondary">
-                🖼️ View Gallery
+            <a href="{% url 'cat_create' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                🏰 Add Your Cat
             </a>
         {% else %}
-            <a href="{% url 'signup' %}" class="icon-btn">
+            <a href="{% url 'register' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
                 🏰 Join the Manor
             </a>
-            <a href="{% url 'login' %}" class="icon-btn secondary">
+            <a href="{% url 'login' %}" class="btn btn-outline-secondary rounded-pill px-4">
                 🔑 Log In
             </a>
-            <a href="{% url 'gallery' %}" class="icon-btn secondary">
-                🖼️ View Gallery
-            </a>
         {% endif %}
+        <a href="{% url 'gallery' %}" class="btn btn-outline-secondary rounded-pill px-4">
+            🖼️ View Gallery
+        </a>
     </div>
-
-    <!-- Interactive Cat Modal -->
-    <div class="modal fade" id="catModal" tabindex="-1" aria-labelledby="catModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="catModalLabel">Cat Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center pt-2">
-                    <img id="modalCatImage" src="" alt="Cat Drawing" class="img-fluid mb-3" style="max-height: 220px; object-fit: contain;">
-                    <h3 id="modalCatName" class="mb-1"></h3>
-                    <p class="text-muted small mb-2">Drawn by <span id="modalCatOwner" class="fw-bold"></span></p>
-                    <p id="modalCatPersonality" class="fst-italic text-secondary mb-4"></p>
-
-                    <div class="d-flex justify-content-center gap-2">
-                        {% if user.is_authenticated %}
-                            <button type="button" id="modalPetBtn" class="btn btn-outline-primary pet-btn rounded-pill px-4">
-                                ✋ Pet Cat
-                            </button>
-                            <button type="button" id="modalFavoriteBtn" class="btn btn-outline-secondary paw-btn rounded-pill px-4">
-                                🐾 Favorite
-                            </button>
-                        {% else %}
-                            <a href="{% url 'login' %}" class="btn btn-primary rounded-pill px-4">
-                                Log in to pet or favorite
-                            </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    // Scatter cats dynamically across the scene floor horizontally
     document.addEventListener('DOMContentLoaded', () => {
-        const catModal = document.getElementById('catModal');
-        let currentCatId = null;
-
-        if (catModal) {
-            catModal.addEventListener('show.bs.modal', (event) => {
-                const trigger = event.relatedTarget;
-                currentCatId = trigger.dataset.catId;
-
-                document.getElementById('modalCatName').textContent = trigger.dataset.catName;
-                document.getElementById('modalCatOwner').textContent = trigger.dataset.catOwner;
-                document.getElementById('modalCatPersonality').textContent = trigger.dataset.catPersonality;
-                document.getElementById('modalCatImage').src = trigger.dataset.catImage;
-
-                const petBtn = document.getElementById('modalPetBtn');
-                const favBtn = document.getElementById('modalFavoriteBtn');
-
-                if (petBtn) {
-                    const isPetted = trigger.dataset.catPetted === 'true';
-                    petBtn.classList.toggle('petted', isPetted);
-                    petBtn.textContent = isPetted ? '✋ Petted Today!' : '✋ Pet Cat';
-                    petBtn.disabled = isPetted;
-                }
-
-                if (favBtn) {
-                    const isFavorited = trigger.dataset.catFavorited === 'true';
-                    favBtn.classList.toggle('reacted', isFavorited);
-                    favBtn.textContent = isFavorited ? '🐾 Favorited' : '🐾 Favorite';
-                }
+        const avatars = document.querySelectorAll('.cat-avatar');
+        const count = avatars.length;
+        
+        if (count > 0) {
+            const spacing = 85 / (count + 1);
+            avatars.forEach((cat, index) => {
+                const leftPos = (index + 1) * spacing;
+                // Add minor random vertical offset for depth
+                const bottomOffset = 35 + Math.floor(Math.random() * 25);
+                cat.style.left = `${leftPos}%`;
+                cat.style.bottom = `${bottomOffset}px`;
             });
         }
     });
