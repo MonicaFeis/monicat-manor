@@ -67,7 +67,11 @@
                 {% endif %}
             {% endif %}
 
-            <a href="{% url 'scene' %}" class="btn btn-link mt-3">&larr; Back to the manor</a>
+            <div class="mt-4">
+                <a href="{% url 'scene' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                    ← Back to the manor
+                </a>
+            </div>
         </div>
     </div>
 {% endblock %}
