@@ -1,7 +1,11 @@
-/*MoniCat Manor custom Stylesheet*/
+/* ============================================
+   MoniCat Manor — Custom Stylesheet
+   ============================================ */
 
-/* MoniCat Manor — CSS System */
+/* ---------- Google Fonts Import ---------- */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fredoka:wght@500;600;700&display=swap');
 
+/* ---------- Color Variables & Base ---------- */
 :root {
     --periwinkle-blue: #4E73F8;
     --deep-blue:       #2A3B8F;
@@ -10,20 +14,53 @@
     --dusty-violet:    #A39BD6;
     --mint-accent:     #78C8AA;
     --rose-accent:     #E89BB2;
+    
+    /* Typography Variables */
+    --font-heading:    'Fredoka', sans-serif;
+    --font-body:       'DM Sans', sans-serif;
+    --font-display:    'Caveat', cursive;
 }
 
 body {
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
     background-color: var(--lavender-mist);
     color: var(--deep-blue);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5 {
+/* ---------- Typography & Headings ---------- */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
     color: var(--deep-blue);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+}
+
+h1 { font-size: 2.25rem; }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.4rem; }
+h4 { font-size: 1.2rem; }
+h5 { font-size: 1rem; }
+
+p {
+    margin-bottom: 1rem;
+}
+
+.text-muted {
+    color: var(--dusty-violet) !important;
+}
+
+.text-brand {
+    font-family: var(--font-display);
     font-weight: 700;
 }
 
-/* Navbar */
+/* ---------- Navbar ---------- */
 .navbar {
     background-color: #FFFFFF;
     border-bottom: 2px solid var(--soft-lavender);
@@ -36,9 +73,19 @@ h1, h2, h3, h4, h5 {
     display: block;
 }
 
+.navbar-brand {
+    font-family: var(--font-display);
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: var(--deep-blue);
+    letter-spacing: 0.02em;
+}
+
 .navbar-nav .nav-link {
+    font-family: var(--font-body);
     color: var(--deep-blue);
     font-weight: 600;
+    font-size: 0.95rem;
     padding: 0.5rem 1rem;
     border-radius: 20px;
     transition: all 0.2s ease;
@@ -50,11 +97,14 @@ h1, h2, h3, h4, h5 {
     background-color: var(--soft-lavender);
 }
 
-/* Buttons */
+/* ---------- Buttons ---------- */
 .btn {
+    font-family: var(--font-heading);
     border-radius: 50rem;
     font-weight: 600;
-    padding: 0.5rem 1.4rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
+    padding: 0.55rem 1.4rem;
     transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -87,7 +137,7 @@ h1, h2, h3, h4, h5 {
     transform: translateY(-1px);
 }
 
-/* Cards & Forms */
+/* ---------- Cards & Forms ---------- */
 .card {
     border: 1px solid var(--soft-lavender);
     border-radius: 16px;
@@ -95,11 +145,25 @@ h1, h2, h3, h4, h5 {
     box-shadow: 0 4px 12px rgba(42, 59, 143, 0.05);
 }
 
+.card-title {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--deep-blue);
+}
+
 .form-control {
+    font-family: var(--font-body);
     border: 2px solid var(--soft-lavender);
     border-radius: 12px;
     padding: 0.6rem 1rem;
     color: var(--deep-blue);
+    font-size: 0.95rem;
+}
+
+.form-control::placeholder {
+    color: var(--dusty-violet);
+    opacity: 0.8;
 }
 
 .form-control:focus {
@@ -107,14 +171,49 @@ h1, h2, h3, h4, h5 {
     box-shadow: 0 0 0 0.25rem rgba(78, 115, 248, 0.15);
 }
 
-/* Scene Setup */
+/* ---------- Badges ---------- */
+.badge {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.35em 0.75em;
+    border-radius: 50rem;
+}
+
+.badge-public {
+    background-color: var(--mint-accent);
+    color: #0E3324;
+}
+
+.badge-private {
+    background-color: var(--rose-accent);
+    color: #4A1020;
+}
+
+button.badge {
+    cursor: pointer;
+    font-size: 0.75rem;
+    line-height: 1;
+    transition: opacity 0.15s ease;
+}
+
+button.badge:hover {
+    opacity: 0.85;
+}
+
+/* ============================================
+   Scene Page (Homepage)
+   ============================================ */
+
 .spotlight-banner {
+    font-family: var(--font-heading);
     background: var(--soft-lavender);
     color: var(--deep-blue);
     text-align: center;
     padding: 8px 12px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 600;
+    letter-spacing: 0.01em;
     max-width: 1300px;
     margin: 0 auto;
     border-radius: 8px 8px 0 0;
@@ -135,10 +234,29 @@ h1, h2, h3, h4, h5 {
     position: absolute;
     inset: 0;
     background-image: url("{% static 'images/manor-bg.png' %}");
-
     background-size: cover;
     background-position: center bottom;
     z-index: 0;
+    transition: filter 0.6s ease;
+}
+
+.scene-bg.time-day {
+    filter: brightness(0.92) saturate(0.75);
+}
+
+.scene-bg.time-dusk {
+    filter: brightness(0.95) saturate(0.9);
+}
+
+.scene-bg.time-night {
+    filter: brightness(1) saturate(0.85);
+}
+
+.scene-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(245, 243, 254, 0.35) 0%, rgba(245, 243, 254, 0) 30%);
 }
 
 .cat-row {
@@ -153,6 +271,12 @@ h1, h2, h3, h4, h5 {
     padding: 0 40px;
     gap: 16px;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.cat-row::-webkit-scrollbar {
+    display: none;
 }
 
 .cat-sprite-wrap {
@@ -169,10 +293,107 @@ h1, h2, h3, h4, h5 {
     transform: scale(1.12) translateY(-4px);
 }
 
+.crown-badge {
+    position: absolute;
+    top: -14px;
+    font-size: 1.4rem;
+    filter: drop-shadow(0 2px 2px rgba(42, 59, 143, 0.4));
+}
+
 .cat-sprite {
     width: 90px;
     height: 90px;
     object-fit: contain;
+    filter:
+        drop-shadow(0 0 2px var(--lavender-mist))
+        drop-shadow(0 0 2px var(--lavender-mist))
+        drop-shadow(0 0 3px var(--lavender-mist))
+        drop-shadow(0 5px 3px rgba(42, 59, 143, 0.3));
+}
+
+.scene-empty {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    flex-direction: column;
+    text-align: center;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--deep-blue);
+}
+
+.scene-pagination-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--lavender-mist);
+    border-top: 1px solid var(--soft-lavender);
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+.pagination-pill {
+    font-family: var(--font-heading);
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: var(--soft-lavender);
+    color: var(--deep-blue);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.pagination-pill:hover {
+    transform: translateY(-1px);
+    color: var(--periwinkle-blue);
+    background: #DDD7F8;
+}
+
+.pagination-current {
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--deep-blue);
+}
+
+.gallery-crown {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 5;
+    font-size: 1.3rem;
+    filter: drop-shadow(0 2px 3px rgba(42, 59, 143, 0.4));
+}
+
+.scroll-hint {
+    font-family: var(--font-heading);
+    position: absolute;
+    z-index: 2;
+    bottom: 22%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(245, 243, 254, 0.95);
+    color: var(--deep-blue);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: 999px;
+    pointer-events: none;
+    box-shadow: 0 2px 6px rgba(42, 59, 143, 0.1);
+}
+
+@media (min-width: 769px) {
+    .scroll-hint {
+        display: none;
+    }
 }
 
 .scene-toolbar {
@@ -182,24 +403,22 @@ h1, h2, h3, h4, h5 {
     padding: 18px 16px;
     background: var(--lavender-mist);
     flex-wrap: wrap;
-    max-width: 1300px;
-    margin: 0 auto;
 }
 
 .icon-btn {
-    display: inline-flex;
+    font-family: var(--font-heading);
+    display: flex;
     align-items: center;
     gap: 8px;
     text-decoration: none;
-    padding: 10px 22px;
+    padding: 10px 20px;
     border-radius: 999px;
     background: var(--periwinkle-blue);
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: #FFFFFF;
-    border: none;
     box-shadow: 0 4px 10px rgba(78, 115, 248, 0.25);
     transition: transform 0.15s ease, background-color 0.15s ease;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #FFFFFF;
 }
 
 .icon-btn:hover {
@@ -209,13 +428,82 @@ h1, h2, h3, h4, h5 {
 }
 
 .icon-btn.secondary {
-    background: #FFFFFF;
-    border: 2px solid var(--soft-lavender);
+    background: var(--soft-lavender);
     color: var(--deep-blue);
     box-shadow: none;
 }
 
 .icon-btn.secondary:hover {
-    background: var(--soft-lavender);
-    color: var(--periwinkle-blue);
+    background: var(--dusty-violet);
+    color: #FFFFFF;
+}
+
+.icon-btn-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.paw-btn.reacted {
+    background: var(--dusty-violet);
+    color: #FFFFFF;
+}
+
+.pet-btn.petted {
+    background: var(--mint-accent);
+    color: #0E3324;
+}
+
+.pet-btn:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+/* ---------- Responsive Adjustments ---------- */
+
+@media (max-width: 576px) {
+    h1 { font-size: 1.8rem; }
+    h2 { font-size: 1.4rem; }
+    
+    .cat-row {
+        padding: 0 12px;
+        bottom: 3%;
+        justify-content: flex-start;
+    }
+    .cat-sprite {
+        width: 60px;
+        height: 60px;
+    }
+    .crown-badge {
+        font-size: 1.1rem;
+        top: -10px;
+    }
+    .scene-toolbar {
+        gap: 10px;
+        flex-direction: column;
+        align-items: center;
+    }
+    .icon-btn {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        width: 200px;
+        justify-content: center;
+    }
+    .spotlight-banner {
+        font-size: 0.85rem;
+        padding: 6px 10px;
+    }
+    .pagination-pill {
+        padding: 5px 12px;
+        font-size: 0.8rem;
+    }
+    .pagination-current {
+        font-size: 0.75rem;
+    }
+}
+
+@media (min-width: 577px) and (max-width: 991px) {
+    .cat-sprite {
+        width: 74px;
+        height: 74px;
+    }
 }
