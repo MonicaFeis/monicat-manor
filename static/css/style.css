@@ -134,7 +134,8 @@ h1, h2, h3, h4, h5 {
 .scene-bg {
     position: absolute;
     inset: 0;
-    background-image: url('../images/manor-bg.png');
+    background-image: url("{% static 'images/manor-bg.png' %}");
+
     background-size: cover;
     background-position: center bottom;
     z-index: 0;
