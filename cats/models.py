@@ -3,15 +3,16 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 
+# Matches the data-value attributes in cat_form.html palette
 COAT_COLOR_CHOICES = [
-    ('cream', 'Cream'),
-    ('terracotta', 'Terracotta'),
-    ('rust', 'Rust'),
-    ('sage', 'Sage'),
+    ('deep_blue', 'Deep Blue'),
+    ('periwinkle', 'Periwinkle'),
+    ('dusty_violet', 'Dusty Violet'),
+    ('mint', 'Mint'),
+    ('rose', 'Rose'),
     ('honey', 'Honey'),
-    ('dusty_rose', 'Dusty Rose'),
     ('ink_brown', 'Ink Brown'),
-    ('classic', 'Black & White'),
+    ('classic', 'Classic Black'),
 ]
 
 
@@ -21,7 +22,7 @@ class Cat(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cats')
     name = models.CharField(max_length=50)
     personality = models.TextField(max_length=300)
-    coat_color = models.CharField(max_length=20, choices=COAT_COLOR_CHOICES, default='cream')
+    coat_color = models.CharField(max_length=20, choices=COAT_COLOR_CHOICES, default='deep_blue')
     drawing_image = models.ImageField(upload_to='cats/')
     is_public = models.BooleanField(default=True)
     created_on = models.DateTimeField(auto_now_add=True)
