@@ -5,89 +5,127 @@
 {% block extra_css %}
 <style>
     .swatch {
-        width: 28px; height: 28px;
+        width: 32px; 
+        height: 32px;
         border-radius: 50%;
-        border: 2px solid #fff;
-        box-shadow: 0 0 0 1px #ccc;
+        border: 2px solid #FFFFFF;
+        box-shadow: 0 0 0 1px var(--dusty-violet);
         cursor: pointer;
-        margin-right: 6px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    .swatch.active { box-shadow: 0 0 0 3px #3D2B1F; }
+    .swatch:hover {
+        transform: scale(1.1);
+    }
+    .swatch.active { 
+        box-shadow: 0 0 0 3px var(--periwinkle-blue); 
+        transform: scale(1.05);
+    }
     #undoStroke {
+        font-family: var(--font-heading);
         font-size: 1.1rem;
         line-height: 1;
-        width: 34px;
-        padding: 0.25rem 0;
+        width: 38px;
+        padding: 0.3rem 0;
     }
     #catCanvas {
-        border: 2px dashed #C97D5D;
-        border-radius: 8px;
-        background: #fff;
+        border: 2px dashed var(--dusty-violet);
+        border-radius: 16px;
+        background: #FFFFFF;
         touch-action: none;
         max-width: 100%;
         height: auto;
         display: block;
+        box-shadow: 0 4px 12px rgba(42, 59, 143, 0.05);
+    }
+    .form-label {
+        font-family: var(--font-heading);
+        font-weight: 600;
+        color: var(--deep-blue);
+        margin-bottom: 0.4rem;
+    }
+    .form-check-input {
+        border: 2px solid var(--dusty-violet);
+        width: 1.25em;
+        height: 1.25em;
+        margin-top: 0.15em;
+    }
+    .form-check-input:checked {
+        background-color: var(--periwinkle-blue);
+        border-color: var(--periwinkle-blue);
+    }
+    .form-check-label {
+        font-family: var(--font-body);
+        color: var(--deep-blue);
+        font-weight: 500;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-7">
-            <h1>{% if object %}Edit {{ object.name }}{% else %}Create your cat{% endif %}</h1>
+    <div class="row justify-content-center py-4">
+        <div class="col-12 col-md-8 col-lg-7">
+            <div class="card p-4 p-md-5">
+                <h1 class="mb-4">{% if object %}Edit {{ object.name }}{% else %}Create your cat{% endif %}</h1>
 
-            <div class="mb-3">
-                <label class="form-label d-block">Pick a coat color</label>
-                <div id="colorPalette" class="d-flex align-items-center flex-wrap">
-                    <span class="swatch active" style="background:#3D2B1F;" data-color="#3D2B1F" data-value="ink_brown"></span>
-                    <span class="swatch" style="background:#FBF3E7; box-shadow:0 0 0 1px #ccc;" data-color="#FBF3E7" data-value="cream"></span>
-                    <span class="swatch" style="background:#C97D5D;" data-color="#C97D5D" data-value="terracotta"></span>
-                    <span class="swatch" style="background:#A6543B;" data-color="#A6543B" data-value="rust"></span>
-                    <span class="swatch" style="background:#8FA07E;" data-color="#8FA07E" data-value="sage"></span>
-                    <span class="swatch" style="background:#E0A458;" data-color="#E0A458" data-value="honey"></span>
-                    <span class="swatch" style="background:#D19C97;" data-color="#D19C97" data-value="dusty_rose"></span>
-                    <span class="swatch" style="background:#111;" data-color="#111111" data-value="classic"></span>
+                <div class="mb-4">
+                    <label class="form-label d-block">Pick a coat color</label>
+                    <div id="colorPalette" class="d-flex align-items-center flex-wrap">
+                        <span class="swatch active" style="background:#2A3B8F;" data-color="#2A3B8F" data-value="ink_brown"></span>
+                        <span class="swatch" style="background:#F5F3FE; box-shadow:0 0 0 1px var(--dusty-violet);" data-color="#F5F3FE" data-value="cream"></span>
+                        <span class="swatch" style="background:#E89BB2;" data-color="#E89BB2" data-value="terracotta"></span>
+                        <span class="swatch" style="background:#A39BD6;" data-color="#A39BD6" data-value="rust"></span>
+                        <span class="swatch" style="background:#78C8AA;" data-color="#78C8AA" data-value="sage"></span>
+                        <span class="swatch" style="background:#4E73F8;" data-color="#4E73F8" data-value="honey"></span>
+                        <span class="swatch" style="background:#E9E6FB;" data-color="#E9E6FB" data-value="dusty_rose"></span>
+                        <span class="swatch" style="background:#2A3B8F;" data-color="#2A3B8F" data-value="classic"></span>
+                    </div>
                 </div>
-            </div>
-
-            <canvas id="catCanvas" width="400" height="400" class="mb-2"
-                    {% if object %}data-existing-image="{{ object.drawing_image.url }}" data-existing-color="{{ object.coat_color }}"{% endif %}></canvas>
-            <div class="mb-4">
-                <button type="button" id="undoStroke" class="btn btn-sm btn-outline-secondary" disabled title="Undo last stroke" aria-label="Undo last stroke">↺</button>
-                <button type="button" id="clearCanvas" class="btn btn-sm btn-outline-secondary">Clear</button>
-                {% if object %}
-                    <span class="text-muted small ms-2">Your existing drawing is loaded — draw on top, or Clear to start fresh</span>
-                {% endif %}
-            </div>
-
-            <form method="post" enctype="multipart/form-data" id="catForm">
-                {% csrf_token %}
 
                 <div class="mb-3">
-                    <label class="form-label">Name</label>
-                    {{ form.name }}
+                    <canvas id="catCanvas" width="400" height="400"
+                            {% if object %}data-existing-image="{{ object.drawing_image.url }}" data-existing-color="{{ object.coat_color }}"{% endif %}></canvas>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Personality</label>
-                    {{ form.personality }}
-                </div>
-
-                <!-- Hidden fields populated by JS before submit -->
-                <input type="hidden" name="coat_color" id="coatColorInput" value="ink_brown">
-                <input type="file" name="drawing_image" id="drawingImageInput" style="display:none;">
-
-                <div class="form-check mb-3">
-                    {{ form.is_public }}
-                    <label class="form-check-label" for="{{ form.is_public.id_for_label }}">
-                        Show this cat in the public scene and gallery
-                    </label>
+                <div class="mb-4 d-flex align-items-center flex-wrap gap-2">
+                    <button type="button" id="undoStroke" class="btn btn-sm btn-outline-secondary" disabled title="Undo last stroke" aria-label="Undo last stroke">↺</button>
+                    <button type="button" id="clearCanvas" class="btn btn-sm btn-outline-secondary">Clear</button>
+                    {% if object %}
+                        <span class="text-muted small ms-1">Your existing drawing is loaded — draw on top, or Clear to start fresh</span>
+                    {% endif %}
                 </div>
 
-                <button type="submit" class="btn btn-primary">
-                    {% if object %}Save changes{% else %}Add to the manor{% endif %}
-                </button>
-                <a href="{% url 'my_cats' %}" class="btn btn-link">Cancel</a>
-            </form>
+                <form method="post" enctype="multipart/form-data" id="catForm">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Personality</label>
+                        {{ form.personality }}
+                    </div>
+
+                    <!-- Hidden fields populated by JS before submit -->
+                    <input type="hidden" name="coat_color" id="coatColorInput" value="ink_brown">
+                    <input type="file" name="drawing_image" id="drawingImageInput" style="display:none;">
+
+                    <div class="form-check mb-4">
+                        {{ form.is_public }}
+                        <label class="form-check-label" for="{{ form.is_public.id_for_label }}">
+                            Show this cat in the public scene and gallery
+                        </label>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3">
+                        <button type="submit" class="btn btn-primary">
+                            {% if object %}Save changes{% else %}Add to the manor{% endif %}
+                        </button>
+                        <a href="{% url 'my_cats' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 {% endblock %}
@@ -99,7 +137,7 @@
     ctx.lineWidth = 7;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    let currentColor = '#3D2B1F';
+    let currentColor = '#2A3B8F';
     let currentCoatValue = 'ink_brown';
     let drawing = false;
 
