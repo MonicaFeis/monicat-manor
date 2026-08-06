@@ -13,6 +13,12 @@
         margin-right: 6px;
     }
     .swatch.active { box-shadow: 0 0 0 3px #3D2B1F; }
+    #undoStroke {
+        font-size: 1.1rem;
+        line-height: 1;
+        width: 34px;
+        padding: 0.25rem 0;
+    }
     #catCanvas {
         border: 2px dashed #C97D5D;
         border-radius: 8px;
@@ -47,7 +53,7 @@
             <canvas id="catCanvas" width="400" height="400" class="mb-2"
                     {% if object %}data-existing-image="{{ object.drawing_image.url }}" data-existing-color="{{ object.coat_color }}"{% endif %}></canvas>
             <div class="mb-4">
-                <button type="button" id="undoStroke" class="btn btn-sm btn-outline-secondary" disabled>↩️ Undo</button>
+                <button type="button" id="undoStroke" class="btn btn-sm btn-outline-secondary" disabled title="Undo last stroke" aria-label="Undo last stroke">↺</button>
                 <button type="button" id="clearCanvas" class="btn btn-sm btn-outline-secondary">Clear</button>
                 {% if object %}
                     <span class="text-muted small ms-2">Your existing drawing is loaded — draw on top, or Clear to start fresh</span>

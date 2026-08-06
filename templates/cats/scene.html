@@ -51,6 +51,9 @@
     <div class="scene-wrapper">
         <div class="scene-bg time-day" id="sceneBg"></div>
         {% if cats %}
+            {% if cats|length > 5 %}
+                <div class="scroll-hint">↔ swipe to see more cats</div>
+            {% endif %}
             <div class="cat-row">
                 {% for cat in cats %}
                     <div class="cat-sprite-wrap"
@@ -72,18 +75,6 @@
                     </div>
                 {% endfor %}
             </div>
-
-            {% if cats.has_other_pages %}
-                <div class="scene-pagination">
-                    {% if cats.has_previous %}
-                        <a href="?page={{ cats.previous_page_number }}" class="btn btn-sm btn-light">&larr; Previous</a>
-                    {% endif %}
-                    <span class="badge bg-light text-dark">Page {{ cats.number }} of {{ cats.paginator.num_pages }}</span>
-                    {% if cats.has_next %}
-                        <a href="?page={{ cats.next_page_number }}" class="btn btn-sm btn-light">Next &rarr;</a>
-                    {% endif %}
-                </div>
-            {% endif %}
         {% else %}
             <div class="scene-empty">
                 <p>No cats have joined the manor yet.</p>
@@ -93,6 +84,18 @@
             </div>
         {% endif %}
     </div>
+
+    {% if cats.has_other_pages %}
+        <div class="scene-pagination-bar">
+            {% if cats.has_previous %}
+                <a href="?page={{ cats.previous_page_number }}" class="pagination-pill">&larr; Previous</a>
+            {% endif %}
+            <span class="pagination-current">Page {{ cats.number }} of {{ cats.paginator.num_pages }}</span>
+            {% if cats.has_next %}
+                <a href="?page={{ cats.next_page_number }}" class="pagination-pill">Next &rarr;</a>
+            {% endif %}
+        </div>
+    {% endif %}
 
     <div class="scene-toolbar">
         {% if user.is_authenticated %}
@@ -277,4 +280,4 @@
         });
     }
 </script>
-{% endblock %}s
+{% endblock %}

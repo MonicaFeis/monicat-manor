@@ -36,10 +36,13 @@
                     </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
+                            <span class="nav-link" style="opacity: 0.75; cursor: default;">👋 {{ user.username }}</span>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{% url 'my_cats' %}">My cats</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'cat_create' %}">Draw a cat</a>
+                            <a class="nav-link" href="{% url 'cat_create' %}">Create a cat</a>
                         </li>
                         <li class="nav-item">
                             <form method="post" action="{% url 'logout' %}" class="d-inline">
