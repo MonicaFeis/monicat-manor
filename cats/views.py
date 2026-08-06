@@ -1,216 +1,179 @@
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse, reverse_lazy
+from django.contrib import messages
+from django.db.models import Count
 from django.utils import timezone
-from django.views.generic import (
-    ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
-)
-from .models import Cat, Comment, Reaction, DailyPet
 
-CATS_PER_SCENE = 8
+from .models import Cat, Reaction, DailyPet, Comment
+from .forms import CatForm, CommentForm
 
-
-# ---------- The shared scene (homepage) ----------
-
-class SceneView(TemplateView):
-    """The homepage: an illustrated scene populated with public cats,
-    shown 10 at a time standing along the same background."""
-    template_name = 'cats/scene.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        today = timezone.localdate()
-
-        all_cats = Cat.objects.filter(is_public=True).annotate(
-            today_pet_count=Count('pets', filter=Q(pets__date=today))
-        )
-
-        paginator = Paginator(all_cats, CATS_PER_SCENE)
-        page_number = self.request.GET.get('page', 1)
-        context['cats'] = paginator.get_page(page_number)
-
-        cat_of_the_day = all_cats.filter(today_pet_count__gt=0).order_by(
-            '-today_pet_count', '?'
-        ).first()
-        context['cat_of_the_day'] = cat_of_the_day
-
-        if self.request.user.is_authenticated:
-            petted_ids = DailyPet.objects.filter(
-                user=self.request.user, date=today
-            ).values_list('cat_id', flat=True)
-            context['petted_cat_ids'] = list(petted_ids)
-        else:
-            context['petted_cat_ids'] = []
-
-        return context
+CATS_PER_SCENE = 12
 
 
-# ---------- Gallery (simple grid browsing) ----------
+def scene(request):
+    """Main landing / scene view showing all public cats in the manor."""
+    # Explicit order_by prevents UnorderedObjectListWarning & 500 errors
+    all_cats = Cat.objects.filter(is_public=True).order_by('-created_on')
+    
+    paginator = Paginator(all_cats, CATS_PER_SCENE)
+    page_number = request.GET.get('page')
+    cats = paginator.get_page(page_number)
 
-class GalleryView(ListView):
-    model = Cat
-    template_name = 'cats/gallery.html'
-    context_object_name = 'cats'
-    paginate_by = 12
-
-    def get_queryset(self):
-        return Cat.objects.filter(is_public=True)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        today = timezone.localdate()
-        cat_of_the_day = Cat.objects.filter(is_public=True).annotate(
-            today_pet_count=Count('pets', filter=Q(pets__date=today))
-        ).filter(today_pet_count__gt=0).order_by('-today_pet_count', '?').first()
-        context['cat_of_the_day'] = cat_of_the_day
-        return context
+    return render(request, 'cats/scene.html', {
+        'cats': cats,
+    })
 
 
-# ---------- My Cats (personal collection) ----------
+def gallery(request):
+    """Grid view displaying public cat portraits with reaction/pet counts."""
+    cats_list = Cat.objects.filter(is_public=True).annotate(
+        reaction_count=Count('reactions', distinct=True),
+        pet_count=Count('pets', distinct=True)
+    ).order_by('-created_on')
 
-class MyCatsView(LoginRequiredMixin, ListView):
-    model = Cat
-    template_name = 'cats/my_cats.html'
-    context_object_name = 'cats'
+    paginator = Paginator(cats_list, 9)
+    page_number = request.GET.get('page')
+    cats = paginator.get_page(page_number)
 
-    def get_queryset(self):
-        return Cat.objects.filter(owner=self.request.user)
-
-
-# ---------- Cat detail (full profile page) ----------
-
-class CatDetailView(DetailView):
-    model = Cat
-    template_name = 'cats/cat_detail.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.request.user.is_authenticated:
-            context['user_has_reacted'] = self.object.reactions.filter(
-                user=self.request.user
-            ).exists()
-        else:
-            context['user_has_reacted'] = False
-        return context
+    return render(request, 'cats/gallery.html', {
+        'cats': cats,
+    })
 
 
-# ---------- Create / Update / Delete a cat ----------
+def cat_detail(request, pk):
+    """Detail page for an individual cat portrait with comments & interactions."""
+    cat = get_object_or_404(Cat, pk=pk)
+    
+    # Restrict private cats to owner only
+    if not cat.is_public and cat.owner != request.user:
+        messages.error(request, "This cat portrait is private.")
+        return redirect('scene')
 
-class CatCreateView(LoginRequiredMixin, CreateView):
-    model = Cat
-    fields = ['name', 'personality', 'coat_color', 'drawing_image', 'is_public']
-    template_name = 'cats/cat_form.html'
-    success_url = reverse_lazy('scene')
+    comments = cat.comments.all().order_by('created_on')
+    has_reacted = False
+    has_petted_today = False
 
-    def form_valid(self, form):
-        form.instance.owner = self.request.user
-        return super().form_valid(form)
+    if request.user.is_authenticated:
+        has_reacted = Reaction.objects.filter(cat=cat, user=request.user).exists()
+        has_petted_today = DailyPet.objects.filter(
+            cat=cat, 
+            user=request.user, 
+            date=timezone.localdate()
+        ).exists()
 
-
-class CatUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = Cat
-    fields = ['name', 'personality', 'coat_color', 'drawing_image', 'is_public']
-    template_name = 'cats/cat_form.html'
-
-    def test_func(self):
-        return self.get_object().owner == self.request.user
-
-    def get_success_url(self):
-        return reverse('cat_detail', kwargs={'pk': self.object.pk})
-
-
-class CatDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = Cat
-    template_name = 'cats/cat_confirm_delete.html'
-    success_url = reverse_lazy('my_cats')
-
-    def test_func(self):
-        return self.get_object().owner == self.request.user
-
-
-@login_required
-def toggle_visibility(request, pk):
-    cat = get_object_or_404(Cat, pk=pk, owner=request.user)
-    cat.is_public = not cat.is_public
-    cat.save()
-    return redirect('my_cats')
-
-
-# ---------- Comments ----------
-
-@login_required
-def add_comment(request, pk):
-    cat = get_object_or_404(Cat, pk=pk, is_public=True)
     if request.method == 'POST':
-        body = request.POST.get('body', '').strip()
-        if body:
-            Comment.objects.create(cat=cat, author=request.user, body=body)
-    return redirect('cat_detail', pk=cat.pk)
+        if not request.user.is_authenticated:
+            messages.warning(request, "Please log in to leave a comment.")
+            return redirect('login')
 
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.cat = cat
+            comment.author = request.user
+            comment.save()
+            messages.success(request, "Comment added successfully!")
+            return redirect('cat_detail', pk=cat.pk)
+    else:
+        form = CommentForm()
 
-class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = Comment
-    fields = ['body']
-    template_name = 'cats/comment_form.html'
+    return render(request, 'cats/cat_detail.html', {
+        'cat': cat,
+        'comments': comments,
+        'form': form,
+        'has_reacted': has_reacted,
+        'has_petted_today': has_petted_today,
+    })
 
-    def test_func(self):
-        return self.get_object().author == self.request.user
-
-    def get_success_url(self):
-        return reverse('cat_detail', kwargs={'pk': self.object.cat.pk})
-
-
-class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = Comment
-    template_name = 'cats/comment_confirm_delete.html'
-
-    def test_func(self):
-        return self.get_object().author == self.request.user
-
-    def get_success_url(self):
-        return reverse('cat_detail', kwargs={'pk': self.object.cat.pk})
-
-
-# ---------- Reactions ----------
 
 @login_required
-def toggle_reaction(request, pk):
-    cat = get_object_or_404(Cat, pk=pk, is_public=True)
-    reaction, created = Reaction.objects.get_or_create(cat=cat, user=request.user)
-    reacted = True
-    if not created:
-        reaction.delete()
-        reacted = False
+def cat_create(request):
+    """Create a new cat portrait entry."""
+    if request.method == 'POST':
+        form = CatForm(request.POST, request.FILES)
+        if form.is_valid():
+            cat = form.save(commit=False)
+            cat.owner = request.user
+            cat.save()
+            messages.success(request, f"{cat.name} joined MoniCat Manor!")
+            return redirect('cat_detail', pk=cat.pk)
+    else:
+        form = CatForm()
 
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({
-            'reacted': reacted,
-            'count': cat.reactions.count(),
-        })
+    return render(request, 'cats/cat_form.html', {
+        'form': form,
+        'title': 'Add a Cat',
+    })
+
+
+@login_required
+def cat_update(request, pk):
+    """Edit an existing cat portrait (owner only)."""
+    cat = get_object_or_404(Cat, pk=pk, owner=request.user)
+
+    if request.method == 'POST':
+        form = CatForm(request.POST, request.FILES, instance=cat)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Updated {cat.name}'s profile!")
+            return redirect('cat_detail', pk=cat.pk)
+    else:
+        form = CatForm(instance=cat)
+
+    return render(request, 'cats/cat_form.html', {
+        'form': form,
+        'cat': cat,
+        'title': f'Edit {cat.name}',
+    })
+
+
+@login_required
+def cat_delete(request, pk):
+    """Delete a cat portrait (owner only)."""
+    cat = get_object_or_404(Cat, pk=pk, owner=request.user)
+
+    if request.method == 'POST':
+        cat_name = cat.name
+        cat.delete()
+        messages.success(request, f"{cat_name} left the manor.")
+        return redirect('scene')
+
+    return render(request, 'cats/cat_confirm_delete.html', {'cat': cat})
+
+
+@login_required
+def react_to_cat(request, pk):
+    """Toggle or record a permanent reaction ('paw'/like) on a cat."""
+    cat = get_object_or_404(Cat, pk=pk)
+    reaction, created = Reaction.objects.get_or_create(cat=cat, user=request.user)
+
+    if created:
+        messages.success(request, f"You reacted to {cat.name}!")
+    else:
+        reaction.delete()
+        messages.info(request, f"Removed reaction from {cat.name}.")
+
     return redirect('cat_detail', pk=cat.pk)
 
-
-# ---------- Daily petting (Cat of the Day) ----------
 
 @login_required
 def pet_cat(request, pk):
-    cat = get_object_or_404(Cat, pk=pk, is_public=True)
+    """Give a cat a daily pet (resets daily)."""
+    cat = get_object_or_404(Cat, pk=pk)
     today = timezone.localdate()
-    pet, created = DailyPet.objects.get_or_create(cat=cat, user=request.user, date=today)
 
-    today_count = cat.pets.filter(date=today).count()
+    pet, created = DailyPet.objects.get_or_create(
+        cat=cat, 
+        user=request.user, 
+        date=today
+    )
 
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({
-            'petted_today': True,
-            'already_petted': not created,
-            'today_count': today_count,
-        })
+    if created:
+        messages.success(request, f"You petted {cat.name} today! 🐾")
+    else:
+        messages.info(request, f"You already petted {cat.name} today!")
+
     return redirect('cat_detail', pk=cat.pk)
 
 
