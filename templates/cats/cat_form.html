@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if object %}Edit {{ object.name }}{% else %}Create a cat{% endif %} · MoniCat Manor{% endblock %}
+{% block title %}{% if object %}Edit your cat{% else %}Create a cat{% endif %} · MoniCat Manor{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -51,8 +51,7 @@
             </div>
 
             <canvas id="catCanvas" width="400" height="400" class="mb-2"
-                    {% if object and object.drawing_image %}data-existing-image="{{ object.drawing_image.url }}" data-existing-color="{{ object.coat_color }}"{% endif %}></canvas>
-            
+                    {% if object %}data-existing-image="{{ object.drawing_image.url }}" data-existing-color="{{ object.coat_color }}"{% endif %}></canvas>
             <div class="mb-4">
                 <button type="button" id="undoStroke" class="btn btn-sm btn-outline-secondary" disabled title="Undo last stroke" aria-label="Undo last stroke">↺</button>
                 <button type="button" id="clearCanvas" class="btn btn-sm btn-outline-secondary">Clear</button>
@@ -66,21 +65,20 @@
 
                 <div class="mb-3">
                     <label class="form-label">Name</label>
-                    <input type="text" name="name" class="form-control" value="{{ form.name.value|default:'' }}" required>
+                    {{ form.name }}
                 </div>
-
                 <div class="mb-3">
                     <label class="form-label">Personality</label>
-                    <textarea name="personality" class="form-control" rows="3">{{ form.personality.value|default:'' }}</textarea>
+                    {{ form.personality }}
                 </div>
 
-                <!-- Hidden form inputs populated dynamically -->
-                <input type="hidden" name="coat_color" id="coatColorInput" value="{{ form.coat_color.value|default:'ink_brown' }}">
+                <!-- Hidden fields populated by JS before submit -->
+                <input type="hidden" name="coat_color" id="coatColorInput" value="ink_brown">
                 <input type="file" name="drawing_image" id="drawingImageInput" style="display:none;">
 
                 <div class="form-check mb-3">
-                    <input type="checkbox" name="is_public" class="form-check-input" id="id_is_public" {% if form.is_public.value %}checked{% endif %}>
-                    <label class="form-check-label" for="id_is_public">
+                    {{ form.is_public }}
+                    <label class="form-check-label" for="{{ form.is_public.id_for_label }}">
                         Show this cat in the public scene and gallery
                     </label>
                 </div>
@@ -88,7 +86,7 @@
                 <button type="submit" class="btn btn-primary">
                     {% if object %}Save changes{% else %}Add to the manor{% endif %}
                 </button>
-                <a href="{% url 'scene' %}" class="btn btn-outline-secondary ms-2">Back to Manor</a>
+                <a href="{% url 'my_cats' %}" class="btn btn-link">Cancel</a>
             </form>
         </div>
     </div>
@@ -105,6 +103,8 @@
     let currentCoatValue = 'ink_brown';
     let drawing = false;
 
+    // Undo history: snapshot the canvas before each new stroke so a
+    // single mistake can be stepped back without clearing everything
     const undoStack = [];
     const MAX_UNDO_STEPS = 20;
     const undoBtn = document.getElementById('undoStroke');
@@ -122,18 +122,20 @@
         if (undoStack.length === 0) undoBtn.disabled = true;
     });
 
+    // If editing an existing cat, load its current drawing onto the
+    // canvas first so submitting without redrawing doesn't wipe it out
     const existingImageUrl = canvas.dataset.existingImage;
     if (existingImageUrl) {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            saveUndoState();
-            undoBtn.disabled = true;
+            saveUndoState(); // baseline state to undo back to
+            undoBtn.disabled = true; // nothing to undo until they draw something new
         };
         img.src = existingImageUrl;
     } else {
-        saveUndoState();
+        saveUndoState(); // blank baseline for a brand new cat
         undoBtn.disabled = true;
     }
 
@@ -147,6 +149,7 @@
         });
     });
 
+    // On edit, pre-select the swatch matching this cat's saved coat color
     const existingColor = canvas.dataset.existingColor;
     if (existingColor) {
         const matchingSwatch = document.querySelector(`.swatch[data-value="${existingColor}"]`);
@@ -156,6 +159,8 @@
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
         const point = e.touches ? e.touches[0] : e;
+        // Scale factor accounts for the canvas being displayed smaller
+        // than its internal 400x400 resolution on narrow screens
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
         return {
@@ -190,19 +195,18 @@
     canvas.addEventListener('touchend', stopDraw);
 
     document.getElementById('clearCanvas').addEventListener('click', () => {
-        saveUndoState();
+        saveUndoState(); // let Clear itself be undoable too
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 
+    // Convert the canvas drawing to a file and attach it before submitting
     document.getElementById('catForm').addEventListener('submit', function (e) {
         e.preventDefault();
         canvas.toBlob((blob) => {
-            if (blob) {
-                const file = new File([blob], 'cat-drawing.png', { type: 'image/png' });
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                document.getElementById('drawingImageInput').files = dataTransfer.files;
-            }
+            const file = new File([blob], 'cat-drawing.png', { type: 'image/png' });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            document.getElementById('drawingImageInput').files = dataTransfer.files;
             this.submit();
         });
     });

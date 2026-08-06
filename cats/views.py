@@ -19,26 +19,24 @@ CATS_PER_SCENE = 8
 
 class SceneView(TemplateView):
     """The homepage: an illustrated scene populated with public cats,
-    shown 8 at a time standing along the same background."""
+    shown 10 at a time standing along the same background."""
     template_name = 'cats/scene.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = timezone.localdate()
 
-        # Added explicit .order_by('id') so PostgreSQL on Heroku doesn't crash during pagination
         all_cats = Cat.objects.filter(is_public=True).annotate(
             today_pet_count=Count('pets', filter=Q(pets__date=today))
-        ).order_by('-id')
+        )
 
         paginator = Paginator(all_cats, CATS_PER_SCENE)
         page_number = self.request.GET.get('page', 1)
         context['cats'] = paginator.get_page(page_number)
 
-        # Explicit query for Cat of the Day
-        cat_of_the_day = Cat.objects.filter(is_public=True).annotate(
-            today_pet_count=Count('pets', filter=Q(pets__date=today))
-        ).filter(today_pet_count__gt=0).order_by('-today_pet_count', 'id').first()
+        cat_of_the_day = all_cats.filter(today_pet_count__gt=0).order_by(
+            '-today_pet_count', '?'
+        ).first()
         context['cat_of_the_day'] = cat_of_the_day
 
         if self.request.user.is_authenticated:
@@ -61,14 +59,14 @@ class GalleryView(ListView):
     paginate_by = 12
 
     def get_queryset(self):
-        return Cat.objects.filter(is_public=True).order_by('-id')
+        return Cat.objects.filter(is_public=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = timezone.localdate()
         cat_of_the_day = Cat.objects.filter(is_public=True).annotate(
             today_pet_count=Count('pets', filter=Q(pets__date=today))
-        ).filter(today_pet_count__gt=0).order_by('-today_pet_count', 'id').first()
+        ).filter(today_pet_count__gt=0).order_by('-today_pet_count', '?').first()
         context['cat_of_the_day'] = cat_of_the_day
         return context
 
@@ -81,7 +79,7 @@ class MyCatsView(LoginRequiredMixin, ListView):
     context_object_name = 'cats'
 
     def get_queryset(self):
-        return Cat.objects.filter(owner=self.request.user).order_by('-id')
+        return Cat.objects.filter(owner=self.request.user)
 
 
 # ---------- Cat detail (full profile page) ----------

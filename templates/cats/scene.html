@@ -1,121 +1,283 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}The Manor Scene · MoniCat Manor{% endblock %}
+{% block title %}MoniCat Manor{% endblock %}
+
+{% block main_class %}p-0{% endblock %}
 
 {% block extra_css %}
 <style>
-    .scene-viewport {
-        position: relative;
-        width: 100%;
-        min-height: 520px;
-        border-radius: 16px;
-        overflow-x: auto;
-        overflow-y: hidden;
-        border: 2px solid var(--soft-lavender, #E2E8F0);
-        box-shadow: inset 0 0 20px rgba(42, 59, 143, 0.05);
-        background-color: #F0F2FB;
-        background-image: url("{% static 'images/manor-bg.png' %}");
-        background-size: cover;
-        background-position: center bottom;
-        background-repeat: no-repeat;
+    /* Page-specific override: only the scene page needs the navbar's
+       normal bottom margin removed, so this stays local rather than
+       affecting every other page via the global stylesheet */
+    .navbar {
+        margin-bottom: 0 !important;
     }
 
-    .scene-content {
-        position: relative;
-        min-width: 900px;
-        height: 520px;
+    /* These three rules need Django's static template tag, so they can't
+       live in the external stylesheet - everything else is in style.css */
+    .scene-bg.time-day {
+        background-image: url('{% static "images/manor-scene-day.png" %}');
+    }
+    .scene-bg.time-dusk {
+        background-image: url('{% static "images/manor-scene-dusk.png" %}');
+    }
+    .scene-bg.time-night {
+        background-image: url('{% static "images/manor-scene-night.png" %}');
     }
 
-    .cat-avatar {
-        position: absolute;
-        bottom: 40px;
-        width: 90px;
-        height: 90px;
-        object-fit: contain;
-        transition: transform 0.2s ease;
-        cursor: pointer;
+    .float-pop {
+        position: fixed;
+        pointer-events: none;
+        font-size: 1.4rem;
+        z-index: 3000;
+        animation: floatUp 0.9s ease-out forwards;
     }
-
-    .cat-avatar:hover {
-        transform: scale(1.15) translateY(-5px);
-    }
-
-    .hint-bar {
-        color: var(--deep-blue, #2A3B8F);
-        font-weight: 500;
-        font-size: 0.9rem;
+    @keyframes floatUp {
+        0% { transform: translateY(0) scale(0.8); opacity: 1; }
+        70% { opacity: 1; }
+        100% { transform: translateY(-40px) scale(1.3); opacity: 0; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid px-3 py-2">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <span class="hint-bar">↔ Scroll to see more cats</span>
+    {% if cat_of_the_day %}
+        <div class="spotlight-banner">
+            🌟 Cat of the Day: <strong>{{ cat_of_the_day.name }}</strong> — the most petted cat in the manor today!
+        </div>
+    {% endif %}
+
+    <div class="scene-wrapper">
+        <div class="scene-bg time-day" id="sceneBg"></div>
+        {% if cats %}
+            {% if cats|length > 5 %}
+                <div class="scroll-hint">↔ swipe to see more cats</div>
+            {% endif %}
+            <div class="cat-row">
+                {% for cat in cats %}
+                    <div class="cat-sprite-wrap"
+                         data-id="{{ cat.pk }}"
+                         data-name="{{ cat.name }}"
+                         data-personality="{{ cat.personality }}"
+                         data-owner="{{ cat.owner.username }}"
+                         data-url="{% url 'cat_detail' cat.pk %}"
+                         data-edit-url="{% url 'cat_update' cat.pk %}"
+                         data-delete-url="{% url 'cat_delete' cat.pk %}"
+                         data-react-url="{% url 'cat_react' cat.pk %}"
+                         data-pet-url="{% url 'cat_pet' cat.pk %}"
+                         data-count="{{ cat.reactions.count }}"
+                         data-petted="{% if cat.pk in petted_cat_ids %}true{% else %}false{% endif %}">
+                        {% if cat_of_the_day and cat.pk == cat_of_the_day.pk %}
+                            <span class="crown-badge">👑</span>
+                        {% endif %}
+                        <img src="{{ cat.drawing_image.url }}" alt="{{ cat.name }}" class="cat-sprite">
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="scene-empty">
+                <p>No cats have joined the manor yet.</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'cat_create' %}" class="btn btn-primary">Create the first cat</a>
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
 
-    <!-- Main Dynamic Scene Container -->
-    <div class="scene-viewport mb-4">
-        <div class="scene-content" id="sceneContent">
-            {% if cats %}
-                {% for cat in cats %}
-                    {% if cat.drawing_image %}
-                        <img src="{{ cat.drawing_image.url }}" 
-                             alt="{{ cat.name }}" 
-                             class="cat-avatar"
-                             title="{{ cat.name }} ({% if cat.personality %}{{ cat.personality }}{% else %}Cozy Manor Resident{% endif %})">
-                    {% endif %}
-                {% endfor %}
-            {% else %}
-                <!-- Default Placeholder Cats if database is empty -->
-                <div class="d-flex align-items-end justify-content-around h-100 pb-5">
-                    <span class="fs-1" title="Welcome Cat">🐱</span>
-                    <span class="fs-1" title="Manor Guard">😸</span>
-                    <span class="fs-1" title="Sleepy Resident">😻</span>
-                </div>
+    {% if cats.has_other_pages %}
+        <div class="scene-pagination-bar">
+            {% if cats.has_previous %}
+                <a href="?page={{ cats.previous_page_number }}" class="pagination-pill">&larr; Previous</a>
+            {% endif %}
+            <span class="pagination-current">Page {{ cats.number }} of {{ cats.paginator.num_pages }}</span>
+            {% if cats.has_next %}
+                <a href="?page={{ cats.next_page_number }}" class="pagination-pill">Next &rarr;</a>
             {% endif %}
         </div>
-    </div>
+    {% endif %}
 
-    <!-- Navigation Action Bar -->
-    <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+    <div class="scene-toolbar">
         {% if user.is_authenticated %}
-            <a href="{% url 'cat_create' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                🏰 Add Your Cat
+            <a href="{% url 'cat_create' %}" class="icon-btn">
+                <span class="icon-btn-icon">🐱</span>
+                <span>Create a cat</span>
             </a>
         {% else %}
-            <a href="{% url 'register' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                🏰 Join the Manor
-            </a>
-            <a href="{% url 'login' %}" class="btn btn-outline-secondary rounded-pill px-4">
-                🔑 Log In
+            <a href="{% url 'signup' %}" class="icon-btn">
+                <span class="icon-btn-icon">🐱</span>
+                <span>Join in</span>
             </a>
         {% endif %}
-        <a href="{% url 'gallery' %}" class="btn btn-outline-secondary rounded-pill px-4">
-            🖼️ View Gallery
+        <a href="{% url 'gallery' %}" class="icon-btn secondary">
+            <span class="icon-btn-icon">🖼️</span>
+            <span>Gallery</span>
         </a>
     </div>
-</div>
+
+    {% csrf_token %}
+
+    <div class="modal fade" id="catModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="catModalName"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="catModalPersonality"></p>
+                    <p class="text-muted small mb-0" id="catModalOwner"></p>
+                    <div id="catModalOwnerActions" class="mt-2" style="display:none;">
+                        <a href="#" id="catModalEditLink" class="btn btn-sm btn-outline-secondary">✏️ Edit</a>
+                        <a href="#" id="catModalDeleteLink" class="btn btn-sm btn-outline-danger">🗑️ Delete</a>
+                    </div>
+                </div>
+                <div class="modal-footer flex-wrap">
+                    {% if user.is_authenticated %}
+                        <button type="button" id="catModalPaw" class="btn btn-outline-secondary btn-sm paw-btn position-relative" title="A permanent favorite - never resets">
+                            🐾 Favorite (<span id="catModalPawCount">0</span>)
+                        </button>
+                        <button type="button" id="catModalPet" class="btn btn-outline-secondary btn-sm pet-btn position-relative" title="Counts toward today's Cat of the Day - resets tomorrow">
+                            💗 Pet today
+                        </button>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm">Log in to react</a>
+                    {% endif %}
+                    <a href="#" id="catModalLink" class="btn btn-outline-secondary btn-sm">View full profile</a>
+                </div>
+                {% if user.is_authenticated %}
+                    <p class="text-muted small text-center mb-2">🐾 Favorite lasts forever · 💗 Pet counts toward today's Cat of the Day only</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Scatter cats dynamically across the scene floor horizontally
-    document.addEventListener('DOMContentLoaded', () => {
-        const avatars = document.querySelectorAll('.cat-avatar');
-        const count = avatars.length;
-        
-        if (count > 0) {
-            const spacing = 85 / (count + 1);
-            avatars.forEach((cat, index) => {
-                const leftPos = (index + 1) * spacing;
-                // Add minor random vertical offset for depth
-                const bottomOffset = 35 + Math.floor(Math.random() * 25);
-                cat.style.left = `${leftPos}%`;
-                cat.style.bottom = `${bottomOffset}px`;
-            });
+    (function setSceneBackground() {
+        const hour = new Date().getHours();
+        const sceneBg = document.getElementById('sceneBg');
+        if (!sceneBg) return;
+
+        sceneBg.classList.remove('time-day', 'time-dusk', 'time-night');
+
+        if (hour >= 6 && hour < 17) {
+            sceneBg.classList.add('time-day');
+        } else if (hour >= 17 && hour < 20) {
+            sceneBg.classList.add('time-dusk');
+        } else {
+            sceneBg.classList.add('time-night');
         }
+    })();
+
+    const catModal = new bootstrap.Modal(document.getElementById('catModal'));
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const currentUsername = '{{ user.username|escapejs }}';
+    let activeReactUrl = null;
+    let activePetUrl = null;
+
+    const nameEmojis = ['🐱', '🐈', '😺', '😸'];
+    const moodEmojis = ['😊', '😽', '🥰', '😌', '😻'];
+
+    function pickEmoji(list, seed) {
+        const index = seed.length % list.length;
+        return list[index];
+    }
+
+    // Shows a small emoji that floats up and fades out from a button,
+    // giving instant visual feedback on paw/pet actions
+    function floatEmojiFrom(button, emoji) {
+        const rect = button.getBoundingClientRect();
+        const pop = document.createElement('span');
+        pop.className = 'float-pop';
+        pop.textContent = emoji;
+        pop.style.left = (rect.left + rect.width / 2 - 10) + 'px';
+        pop.style.top = rect.top + 'px';
+        document.body.appendChild(pop);
+        setTimeout(() => pop.remove(), 900);
+    }
+
+    document.querySelectorAll('.cat-sprite-wrap').forEach((wrap) => {
+        wrap.addEventListener('click', () => {
+            const name = wrap.dataset.name;
+            const personality = wrap.dataset.personality;
+
+            document.getElementById('catModalName').textContent =
+                name + ' ' + pickEmoji(nameEmojis, name);
+            document.getElementById('catModalPersonality').textContent =
+                pickEmoji(moodEmojis, personality) + ' ' + personality;
+            document.getElementById('catModalOwner').textContent = 'Created by ' + wrap.dataset.owner;
+            document.getElementById('catModalLink').href = wrap.dataset.url;
+
+            const ownerActions = document.getElementById('catModalOwnerActions');
+            if (currentUsername && wrap.dataset.owner === currentUsername) {
+                document.getElementById('catModalEditLink').href = wrap.dataset.editUrl;
+                document.getElementById('catModalDeleteLink').href = wrap.dataset.deleteUrl;
+                ownerActions.style.display = 'block';
+            } else {
+                ownerActions.style.display = 'none';
+            }
+
+            activeReactUrl = wrap.dataset.reactUrl;
+            activePetUrl = wrap.dataset.petUrl;
+
+            const pawCountEl = document.getElementById('catModalPawCount');
+            if (pawCountEl) pawCountEl.textContent = wrap.dataset.count;
+            const pawBtn = document.getElementById('catModalPaw');
+            if (pawBtn) pawBtn.classList.remove('reacted');
+
+            const petBtn = document.getElementById('catModalPet');
+            if (petBtn) {
+                const alreadyPetted = wrap.dataset.petted === 'true';
+                petBtn.disabled = alreadyPetted;
+                petBtn.classList.toggle('petted', alreadyPetted);
+                petBtn.textContent = alreadyPetted ? '💗 Petted today' : '💗 Pet today';
+            }
+
+            catModal.show();
+        });
     });
+
+    const pawBtn = document.getElementById('catModalPaw');
+    if (pawBtn) {
+        pawBtn.addEventListener('click', () => {
+            if (!activeReactUrl) return;
+            fetch(activeReactUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+                .then((res) => res.json())
+                .then((data) => {
+                    document.getElementById('catModalPawCount').textContent = data.count;
+                    pawBtn.classList.toggle('reacted', data.reacted);
+                    if (data.reacted) floatEmojiFrom(pawBtn, '🐾');
+                });
+        });
+    }
+
+    const petBtn = document.getElementById('catModalPet');
+    if (petBtn) {
+        petBtn.addEventListener('click', () => {
+            if (!activePetUrl || petBtn.disabled) return;
+            fetch(activePetUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+                .then((res) => res.json())
+                .then(() => {
+                    petBtn.disabled = true;
+                    petBtn.classList.add('petted');
+                    petBtn.textContent = '💗 Petted today';
+                    floatEmojiFrom(petBtn, '💗');
+                });
+        });
+    }
 </script>
 {% endblock %}
