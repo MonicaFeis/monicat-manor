@@ -21,16 +21,18 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
 
-    <!-- Navbar capped to container-xl for wide monitors -->
+    <!-- Navbar capped to container-xl -->
     <nav class="navbar navbar-expand-lg">
         <div class="container-xl">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'scene' %}">
-                <img src="{% static 'images/logo.png' %}" alt="MoniCat Manor Logo" style="height: 42px; width: auto;">
-                <span>MoniCat Manor</span>
+            <!-- Brand Logo Only (Text removed) -->
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'scene' %}">
+                <img src="{% static 'images/logo.png' %}" alt="MoniCat Manor Logo" class="nav-logo">
             </a>
+            
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
             <div class="collapse navbar-collapse" id="navMenu">
                 <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
                     <li class="nav-item">
@@ -44,10 +46,10 @@
                             <a class="nav-link" href="{% url 'my_cats' %}">My Cats</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link btn btn-primary text-white ms-lg-2 my-1 my-lg-0 px-3" href="{% url 'cat_create' %}">+ Create a Cat</a>
+                            <a class="nav-link" href="{% url 'cat_create' %}">🐱 Create a Cat</a>
                         </li>
                         <li class="nav-item ms-lg-2">
-                            <span class="nav-link text-muted" style="cursor: default;">👋 {{ user.username }}</span>
+                            <span class="nav-link text-muted" style="cursor: default;">😺 {{ user.username }}</span>
                         </li>
                         <li class="nav-item">
                             <form method="post" action="{% url 'logout' %}" class="d-inline">
@@ -60,7 +62,7 @@
                             <a class="nav-link" href="{% url 'login' %}">Log in</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link btn btn-primary text-white ms-lg-2 my-1 my-lg-0 px-3" href="{% url 'signup' %}">Sign up</a>
+                            <a class="nav-link" href="{% url 'signup' %}">Sign up</a>
                         </li>
                     {% endif %}
                 </ul>
