@@ -11,7 +11,6 @@ from django.views.generic import (
     ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 )
 from .models import Cat, Comment, Reaction, DailyPet
-from .forms import CatForm, CommentForm
 
 CATS_PER_SCENE = 8
 
@@ -104,7 +103,7 @@ class CatDetailView(DetailView):
 
 class CatCreateView(LoginRequiredMixin, CreateView):
     model = Cat
-    form_class = CatForm
+    fields = ['name', 'personality', 'coat_color', 'drawing_image', 'is_public']
     template_name = 'cats/cat_form.html'
     success_url = reverse_lazy('scene')
 
@@ -115,7 +114,7 @@ class CatCreateView(LoginRequiredMixin, CreateView):
 
 class CatUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Cat
-    form_class = CatForm
+    fields = ['name', 'personality', 'coat_color', 'drawing_image', 'is_public']
     template_name = 'cats/cat_form.html'
 
     def test_func(self):
@@ -148,18 +147,15 @@ def toggle_visibility(request, pk):
 def add_comment(request, pk):
     cat = get_object_or_404(Cat, pk=pk, is_public=True)
     if request.method == 'POST':
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.cat = cat
-            comment.author = request.user
-            comment.save()
+        body = request.POST.get('body', '').strip()
+        if body:
+            Comment.objects.create(cat=cat, author=request.user, body=body)
     return redirect('cat_detail', pk=cat.pk)
 
 
 class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Comment
-    form_class = CommentForm
+    fields = ['body']
     template_name = 'cats/comment_form.html'
 
     def test_func(self):
