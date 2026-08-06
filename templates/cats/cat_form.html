@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if object %}Edit your cat{% else %}Create a cat{% endif %} · MoniCat Manor{% endblock %}
+{% block title %}{% if object %}Edit {{ object.name }}{% else %}Create a cat{% endif %} · MoniCat Manor{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -78,15 +78,15 @@
                         {% if object %}data-existing-image="{{ object.drawing_image.url }}" data-existing-color="{{ object.coat_color }}"{% endif %}></canvas>
                 
                 <div class="d-flex align-items-center gap-2 mb-2">
-                    <button type="button" id="undoStroke" class="btn btn-sm btn-outline-secondary" disabled title="Undo last stroke" aria-label="Undo last stroke">↺</button>
-                    <button type="button" id="clearCanvas" class="btn btn-sm btn-outline-secondary">Clear</button>
+                    <button type="button" id="undoStroke" class="btn btn-sm btn-outline-secondary rounded-pill" disabled title="Undo last stroke" aria-label="Undo last stroke">↺</button>
+                    <button type="button" id="clearCanvas" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Clear</button>
                     {% if object %}
                         <span class="text-muted small ms-auto">Existing drawing loaded — draw on top or click Clear</span>
                     {% endif %}
                 </div>
             </div>
 
-            <form method="post" enctype="multipart/form-data" id="catForm" class="card p-4">
+            <form method="post" enctype="multipart/form-data" id="catForm" class="card p-4 mb-4">
                 {% csrf_token %}
 
                 <div class="mb-3">
@@ -111,12 +111,18 @@
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
-                    <button type="submit" class="btn btn-primary px-4">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">
                         {% if object %}Save changes{% else %}Add to the manor{% endif %}
                     </button>
-                    <a href="{% url 'my_cats' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{% url 'my_cats' %}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
                 </div>
             </form>
+
+            <div>
+                <a href="{% url 'scene' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                    ← Back to the manor
+                </a>
+            </div>
         </div>
     </div>
 {% endblock %}

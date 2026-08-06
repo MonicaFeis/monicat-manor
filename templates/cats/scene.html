@@ -1,154 +1,117 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}MoniCat Manor — Shared Scene{% endblock %}
-
-{% block main_class %}p-0{% endblock %}
-
-{% block extra_css %}
-<style>
-    .navbar {
-        margin-bottom: 0 !important;
-    }
-
-    /* Scene background assets */
-    .scene-bg.time-day {
-        background-image: url('{% static "images/manor-scene-day.png" %}');
-    }
-    .scene-bg.time-dusk {
-        background-image: url('{% static "images/manor-scene-dusk.png" %}');
-    }
-    .scene-bg.time-night {
-        background-image: url('{% static "images/manor-scene-night.png" %}');
-    }
-
-    /* Floating animation for paw & heart taps */
-    .float-pop {
-        position: fixed;
-        pointer-events: none;
-        font-size: 1.4rem;
-        z-index: 3000;
-        animation: floatUp 0.9s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-    }
-    @keyframes floatUp {
-        0% { transform: translateY(0) scale(0.8); opacity: 1; }
-        70% { opacity: 1; }
-        100% { transform: translateY(-45px) scale(1.3); opacity: 0; }
-    }
-</style>
-{% endblock %}
+{% block title %}The Manor · MoniCat Manor{% endblock %}
 
 {% block content %}
+    <!-- Spotlight Banner -->
     {% if cat_of_the_day %}
         <div class="spotlight-banner">
-            🌟 Cat of the Day: <strong>{{ cat_of_the_day.name }}</strong> — the most petted cat in the manor today!
+            ✨ Cat of the Day: <strong>{{ cat_of_the_day.name }}</strong> with {{ cat_of_the_day.today_pet_count }} pet{{ cat_of_the_day.today_pet_count|pluralize }} today!
         </div>
     {% endif %}
 
+    <!-- Main Scene Canvas Area -->
     <div class="scene-wrapper">
-        <div class="scene-bg time-day" id="sceneBg"></div>
+        <div class="scene-bg time-day"></div>
+
         {% if cats %}
-            {% if cats|length > 5 %}
-                <div class="scroll-hint">↔ swipe to see more cats</div>
-            {% endif %}
             <div class="cat-row">
                 {% for cat in cats %}
-                    <div class="cat-sprite-wrap"
-                         data-id="{{ cat.pk }}"
-                         data-name="{{ cat.name }}"
-                         data-personality="{{ cat.personality }}"
-                         data-owner="{{ cat.owner.username }}"
-                         data-url="{% url 'cat_detail' cat.pk %}"
-                         data-edit-url="{% url 'cat_update' cat.pk %}"
-                         data-delete-url="{% url 'cat_delete' cat.pk %}"
-                         data-react-url="{% url 'cat_react' cat.pk %}"
-                         data-pet-url="{% url 'cat_pet' cat.pk %}"
-                         data-count="{{ cat.reactions.count }}"
-                         data-favorited="{% if user.is_authenticated and cat.pk in favorited_cat_ids %}true{% else %}false{% endif %}"
-                         data-petted="{% if cat.pk in petted_cat_ids %}true{% else %}false{% endif %}">
-                        {% if cat_of_the_day and cat.pk == cat_of_the_day.pk %}
+                    <div class="cat-sprite-wrap" 
+                         data-bs-toggle="modal" 
+                         data-bs-target="#catModal"
+                         data-cat-id="{{ cat.pk }}"
+                         data-cat-name="{{ cat.name }}"
+                         data-cat-personality="{{ cat.personality|default:'A mysterious resident.' }}"
+                         data-cat-owner="{{ cat.owner.username }}"
+                         data-cat-image="{{ cat.drawing_image.url }}"
+                         data-cat-petted="{% if cat.pk in petted_cat_ids %}true{% else %}false{% endif %}"
+                         data-cat-favorited="{% if cat.pk in favorited_cat_ids %}true{% else %}false{% endif %}">
+                        
+                        {% if cat == cat_of_the_day %}
                             <span class="crown-badge" title="Cat of the Day">👑</span>
                         {% endif %}
-                        <img src="{{ cat.drawing_image.url }}" alt="{{ cat.name }} drawing" class="cat-sprite">
+                        
+                        <img src="{{ cat.drawing_image.url }}" alt="{{ cat.name }}" class="cat-sprite">
                     </div>
                 {% endfor %}
             </div>
+            <div class="scroll-hint">↔ Scroll to see more cats</div>
         {% else %}
             <div class="scene-empty">
-                <p class="fs-5 fw-medium mb-3">No cats have joined the manor yet.</p>
-                {% if user.is_authenticated %}
-                    <a href="{% url 'cat_create' %}" class="btn btn-primary">Create the first cat</a>
-                {% endif %}
+                <h3>The Manor is quiet today...</h3>
+                <p class="text-muted">No public cats are wandering around right now.</p>
             </div>
         {% endif %}
     </div>
 
+    <!-- Scene Pagination -->
     {% if cats.has_other_pages %}
         <div class="scene-pagination-bar">
             {% if cats.has_previous %}
-                <a href="?page={{ cats.previous_page_number }}" class="pagination-pill">&larr; Previous</a>
+                <a href="?page={{ cats.previous_page_number }}" class="pagination-pill">← Previous</a>
             {% endif %}
+            
             <span class="pagination-current">Page {{ cats.number }} of {{ cats.paginator.num_pages }}</span>
+            
             {% if cats.has_next %}
-                <a href="?page={{ cats.next_page_number }}" class="pagination-pill">Next &rarr;</a>
+                <a href="?page={{ cats.next_page_number }}" class="pagination-pill">Next →</a>
             {% endif %}
         </div>
     {% endif %}
 
+    <!-- Dynamic Toolbar: Auth vs Guest -->
     <div class="scene-toolbar">
         {% if user.is_authenticated %}
             <a href="{% url 'cat_create' %}" class="icon-btn">
-                <span class="icon-btn-icon">🐱</span>
-                <span>Create a Cat</span>
+                🐱 Draw a Cat
+            </a>
+            <a href="{% url 'gallery' %}" class="icon-btn secondary">
+                🖼️ View Gallery
             </a>
         {% else %}
             <a href="{% url 'signup' %}" class="icon-btn">
-                <span class="icon-btn-icon">🐱</span>
-                <span>Join in</span>
+                🏰 Join the Manor
+            </a>
+            <a href="{% url 'login' %}" class="icon-btn secondary">
+                🔑 Log In
+            </a>
+            <a href="{% url 'gallery' %}" class="icon-btn secondary">
+                🖼️ View Gallery
             </a>
         {% endif %}
-        <a href="{% url 'gallery' %}" class="icon-btn secondary">
-            <span class="icon-btn-icon">🖼️</span>
-            <span>View Gallery</span>
-        </a>
     </div>
 
-    {% csrf_token %}
-
-    <!-- Cat Modal -->
-    <div class="modal fade" id="catModal" tabindex="-1" aria-labelledby="catModalName" aria-hidden="true">
+    <!-- Interactive Cat Modal -->
+    <div class="modal fade" id="catModal" tabindex="-1" aria-labelledby="catModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+            <div class="modal-content border-0 shadow">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title" id="catModalName"></h5>
+                    <h5 class="modal-title fw-bold" id="catModalLabel">Cat Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <p id="catModalPersonality" class="lead mb-2"></p>
-                    <p class="text-muted small mb-0" id="catModalOwner"></p>
-                    <div id="catModalOwnerActions" class="mt-3" style="display:none;">
-                        <a href="#" id="catModalEditLink" class="btn btn-sm btn-outline-secondary me-1">✏️ Edit</a>
-                        <a href="#" id="catModalDeleteLink" class="btn btn-sm btn-outline-danger">🗑️ Delete</a>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 flex-wrap justify-content-between">
-                    <div class="d-flex gap-2">
+                <div class="modal-body text-center pt-2">
+                    <img id="modalCatImage" src="" alt="Cat Drawing" class="img-fluid mb-3" style="max-height: 220px; object-fit: contain;">
+                    <h3 id="modalCatName" class="mb-1"></h3>
+                    <p class="text-muted small mb-2">Drawn by <span id="modalCatOwner" class="fw-bold"></span></p>
+                    <p id="modalCatPersonality" class="fst-italic text-secondary mb-4"></p>
+
+                    <div class="d-flex justify-content-center gap-2">
                         {% if user.is_authenticated %}
-                            <button type="button" id="catModalPaw" class="btn btn-outline-secondary btn-sm paw-btn" title="A permanent favorite - never resets">
-                                🐾 Favorite (<span id="catModalPawCount">0</span>)
+                            <button type="button" id="modalPetBtn" class="btn btn-outline-primary pet-btn rounded-pill px-4">
+                                ✋ Pet Cat
                             </button>
-                            <button type="button" id="catModalPet" class="btn btn-outline-secondary btn-sm pet-btn" title="Counts toward today's Cat of the Day - resets tomorrow">
-                                💗 Pet today
+                            <button type="button" id="modalFavoriteBtn" class="btn btn-outline-secondary paw-btn rounded-pill px-4">
+                                🐾 Favorite
                             </button>
                         {% else %}
-                            <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm">Log in to react</a>
+                            <a href="{% url 'login' %}" class="btn btn-primary rounded-pill px-4">
+                                Log in to pet or favorite
+                            </a>
                         {% endif %}
                     </div>
-                    <a href="#" id="catModalLink" class="btn btn-primary btn-sm">Full Profile &rarr;</a>
                 </div>
-                {% if user.is_authenticated %}
-                    <p class="text-muted small text-center mb-3">🐾 Favorite lasts forever · 💗 Pet counts toward today's Cat of the Day</p>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -156,141 +119,37 @@
 
 {% block extra_js %}
 <script>
-    (function setSceneBackground() {
-        const hour = new Date().getHours();
-        const sceneBg = document.getElementById('sceneBg');
-        if (!sceneBg) return;
+    document.addEventListener('DOMContentLoaded', () => {
+        const catModal = document.getElementById('catModal');
+        let currentCatId = null;
 
-        sceneBg.classList.remove('time-day', 'time-dusk', 'time-night');
+        if (catModal) {
+            catModal.addEventListener('show.bs.modal', (event) => {
+                const trigger = event.relatedTarget;
+                currentCatId = trigger.dataset.catId;
 
-        if (hour >= 6 && hour < 17) {
-            sceneBg.classList.add('time-day');
-        } else if (hour >= 17 && hour < 20) {
-            sceneBg.classList.add('time-dusk');
-        } else {
-            sceneBg.classList.add('time-night');
+                document.getElementById('modalCatName').textContent = trigger.dataset.catName;
+                document.getElementById('modalCatOwner').textContent = trigger.dataset.catOwner;
+                document.getElementById('modalCatPersonality').textContent = trigger.dataset.catPersonality;
+                document.getElementById('modalCatImage').src = trigger.dataset.catImage;
+
+                const petBtn = document.getElementById('modalPetBtn');
+                const favBtn = document.getElementById('modalFavoriteBtn');
+
+                if (petBtn) {
+                    const isPetted = trigger.dataset.catPetted === 'true';
+                    petBtn.classList.toggle('petted', isPetted);
+                    petBtn.textContent = isPetted ? '✋ Petted Today!' : '✋ Pet Cat';
+                    petBtn.disabled = isPetted;
+                }
+
+                if (favBtn) {
+                    const isFavorited = trigger.dataset.catFavorited === 'true';
+                    favBtn.classList.toggle('reacted', isFavorited);
+                    favBtn.textContent = isFavorited ? '🐾 Favorited' : '🐾 Favorite';
+                }
+            });
         }
-    })();
-
-    const catModalEl = document.getElementById('catModal');
-    const catModal = new bootstrap.Modal(catModalEl);
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const currentUsername = '{{ user.username|escapejs }}';
-    let activeReactUrl = null;
-    let activePetUrl = null;
-
-    const nameEmojis = ['🐱', '🐈', '😺', '😸'];
-    const moodEmojis = ['😊', '😽', '🥰', '😌', '😻'];
-
-    function pickEmoji(list, seed) {
-        return list[(seed || '').length % list.length];
-    }
-
-    function floatEmojiFrom(button, emoji) {
-        const rect = button.getBoundingClientRect();
-        const pop = document.createElement('span');
-        pop.className = 'float-pop';
-        pop.textContent = emoji;
-        pop.style.left = (rect.left + rect.width / 2 - 10) + 'px';
-        pop.style.top = rect.top + 'px';
-        document.body.appendChild(pop);
-        setTimeout(() => pop.remove(), 900);
-    }
-
-    document.querySelectorAll('.cat-sprite-wrap').forEach((wrap) => {
-        wrap.addEventListener('click', () => {
-            const name = wrap.dataset.name;
-            const personality = wrap.dataset.personality;
-
-            document.getElementById('catModalName').textContent = `${name} ${pickEmoji(nameEmojis, name)}`;
-            document.getElementById('catModalPersonality').textContent = `${pickEmoji(moodEmojis, personality)} ${personality}`;
-            document.getElementById('catModalOwner').textContent = `Created by ${wrap.dataset.owner}`;
-            document.getElementById('catModalLink').href = wrap.dataset.url;
-
-            const ownerActions = document.getElementById('catModalOwnerActions');
-            if (currentUsername && wrap.dataset.owner === currentUsername) {
-                document.getElementById('catModalEditLink').href = wrap.dataset.editUrl;
-                document.getElementById('catModalDeleteLink').href = wrap.dataset.deleteUrl;
-                ownerActions.style.display = 'block';
-            } else {
-                ownerActions.style.display = 'none';
-            }
-
-            activeReactUrl = wrap.dataset.reactUrl;
-            activePetUrl = wrap.dataset.petUrl;
-
-            const pawCountEl = document.getElementById('catModalPawCount');
-            if (pawCountEl) pawCountEl.textContent = wrap.dataset.count;
-            const pawBtn = document.getElementById('catModalPaw');
-            if (pawBtn) {
-                const isFavorited = wrap.dataset.favorited === 'true';
-                pawBtn.classList.toggle('reacted', isFavorited);
-            }
-
-            const petBtn = document.getElementById('catModalPet');
-            if (petBtn) {
-                const alreadyPetted = wrap.dataset.petted === 'true';
-                petBtn.disabled = alreadyPetted;
-                petBtn.classList.toggle('petted', alreadyPetted);
-                petBtn.textContent = alreadyPetted ? '💗 Petted today' : '💗 Pet today';
-            }
-
-            catModal.show();
-        });
     });
-
-    const pawBtn = document.getElementById('catModalPaw');
-    if (pawBtn) {
-        pawBtn.addEventListener('click', () => {
-            if (!activeReactUrl) return;
-            fetch(activeReactUrl, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    document.getElementById('catModalPawCount').textContent = data.count;
-                    pawBtn.classList.toggle('reacted', data.reacted);
-
-                    const activeSprite = document.querySelector(`.cat-sprite-wrap[data-react-url="${activeReactUrl}"]`);
-                    if (activeSprite) {
-                        activeSprite.dataset.count = data.count;
-                        activeSprite.dataset.favorited = data.reacted ? 'true' : 'false';
-                    }
-
-                    if (data.reacted) floatEmojiFrom(pawBtn, '🐾');
-                });
-        });
-    }
-
-    const petBtn = document.getElementById('catModalPet');
-    if (petBtn) {
-        petBtn.addEventListener('click', () => {
-            if (!activePetUrl || petBtn.disabled) return;
-            fetch(activePetUrl, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-            })
-                .then((res) => res.json())
-                .then(() => {
-                    petBtn.disabled = true;
-                    petBtn.classList.add('petted');
-                    petBtn.textContent = '💗 Petted today';
-
-                    const activeSprite = document.querySelector(`.cat-sprite-wrap[data-pet-url="${activePetUrl}"]`);
-                    if (activeSprite) {
-                        activeSprite.dataset.petted = 'true';
-                    }
-
-                    floatEmojiFrom(petBtn, '💗');
-                });
-        });
-    }
 </script>
 {% endblock %}
