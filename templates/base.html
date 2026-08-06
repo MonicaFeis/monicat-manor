@@ -21,10 +21,10 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
 
-    <!-- Navbar capped to container-xl -->
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg">
         <div class="container-xl">
-            <!-- Brand Logo Only (Text removed) -->
+            <!-- Brand Logo -->
             <a class="navbar-brand d-flex align-items-center" href="{% url 'scene' %}">
                 <img src="{% static 'images/logo.png' %}" alt="MoniCat Manor Logo" class="nav-logo">
             </a>
@@ -39,17 +39,17 @@
                         <a class="nav-link" href="{% url 'scene' %}">🏡 The Manor</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'gallery' %}">Gallery</a>
+                        <a class="nav-link" href="{% url 'gallery' %}">🖼️ Gallery</a>
                     </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'my_cats' %}">My Cats</a>
+                            <a class="nav-link" href="{% url 'my_cats' %}">🐾 My Cats</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'cat_create' %}">🐱 Create a Cat</a>
                         </li>
                         <li class="nav-item ms-lg-2">
-                            <span class="nav-link text-muted" style="cursor: default;">😺 {{ user.username }}</span>
+                            <span class="nav-link text-muted" style="cursor: default;">🙂 {{ user.username }}</span>
                         </li>
                         <li class="nav-item">
                             <form method="post" action="{% url 'logout' %}" class="d-inline">
