@@ -5,29 +5,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}MoniCat Manor{% endblock %}</title>
+
+    <!-- Favicons -->
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/favicon/apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon/favicon-32x32.png' %}">
     <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon/favicon-16x16.png' %}">
     <link rel="manifest" href="{% static 'images/favicon/site.webmanifest' %}">
 
+    <!-- CSS Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
 
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'scene' %}">
-                <img src="{% static 'images/logo.png' %}" alt="MoniCat Manor" style="height: 40px; width: auto;">
+    <!-- Navbar capped to container-xl for wide monitors -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-xl">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'scene' %}">
+                <img src="{% static 'images/logo.png' %}" alt="MoniCat Manor Logo" style="height: 42px; width: auto;">
+                <span>MoniCat Manor</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navMenu">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'scene' %}">🏡 The Manor</a>
                     </li>
@@ -36,18 +41,18 @@
                     </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <span class="nav-link" style="opacity: 0.75; cursor: default;">👋 {{ user.username }}</span>
+                            <a class="nav-link" href="{% url 'my_cats' %}">My Cats</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'my_cats' %}">My cats</a>
+                            <a class="nav-link btn btn-primary text-white ms-lg-2 my-1 my-lg-0 px-3" href="{% url 'cat_create' %}">+ Create a Cat</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'cat_create' %}">Create a cat</a>
+                        <li class="nav-item ms-lg-2">
+                            <span class="nav-link text-muted" style="cursor: default;">👋 {{ user.username }}</span>
                         </li>
                         <li class="nav-item">
                             <form method="post" action="{% url 'logout' %}" class="d-inline">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-link nav-link">Log out</button>
+                                <button type="submit" class="nav-link btn btn-link p-0 border-0 align-baseline text-decoration-none">Log out</button>
                             </form>
                         </li>
                     {% else %}
@@ -55,7 +60,7 @@
                             <a class="nav-link" href="{% url 'login' %}">Log in</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'signup' %}">Sign up</a>
+                            <a class="nav-link btn btn-primary text-white ms-lg-2 my-1 my-lg-0 px-3" href="{% url 'signup' %}">Sign up</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -63,18 +68,32 @@
         </div>
     </nav>
 
-    <main class="{% block main_class %}container mb-5{% endblock %}">
+    <!-- Main Content Body -->
+    <main class="{% block main_class %}container-xl my-4{% endblock %} flex-grow-1">
         {% if messages %}
-            <div class="container">
-                {% for message in messages %}
-                    <div class="alert alert-info">{{ message }}</div>
-                {% endfor %}
+            <div class="row justify-content-center">
+                <div class="col-md-10">
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         {% endif %}
 
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Footer -->
+    <footer class="py-3 text-center border-top mt-auto" style="border-color: var(--soft-lavender) !important;">
+        <div class="container-xl">
+            <p class="mb-0 small text-muted">&copy; {% now "Y" %} MoniCat Manor. Drawn with love.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock %}
 </body>

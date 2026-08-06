@@ -4,89 +4,118 @@
 
 {% block extra_css %}
 <style>
+    /* Canvas & Swatch Controls */
     .swatch {
-        width: 28px; height: 28px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
-        border: 2px solid #fff;
-        box-shadow: 0 0 0 1px #ccc;
+        border: 2px solid #FFFFFF;
+        box-shadow: 0 0 0 1px var(--dusty-violet);
         cursor: pointer;
-        margin-right: 6px;
+        margin-right: 8px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    .swatch.active { box-shadow: 0 0 0 3px #3D2B1F; }
+    .swatch:hover {
+        transform: scale(1.1);
+    }
+    .swatch.active {
+        box-shadow: 0 0 0 3px var(--periwinkle-blue);
+        transform: scale(1.05);
+    }
     #undoStroke {
         font-size: 1.1rem;
         line-height: 1;
-        width: 34px;
+        width: 38px;
         padding: 0.25rem 0;
     }
     #catCanvas {
-        border: 2px dashed #C97D5D;
-        border-radius: 8px;
-        background: #fff;
+        border: 2px dashed var(--dusty-violet);
+        border-radius: 12px;
+        background: #FFFFFF;
         touch-action: none;
         max-width: 100%;
         height: auto;
         display: block;
+        box-shadow: 0 4px 12px rgba(42, 59, 143, 0.04);
+    }
+    
+    /* Input Polish */
+    .form-control {
+        border: 2px solid var(--soft-lavender);
+        border-radius: 12px;
+        padding: 0.6rem 1rem;
+        color: var(--deep-blue);
+    }
+    .form-control:focus {
+        border-color: var(--periwinkle-blue);
+        box-shadow: 0 0 0 0.25rem rgba(78, 115, 248, 0.15);
     }
 </style>
 {% endblock %}
 
 {% block content %}
     <div class="row justify-content-center">
-        <div class="col-12 col-md-7">
-            <h1>{% if object %}Edit {{ object.name }}{% else %}Create your cat{% endif %}</h1>
+        <div class="col-12 col-md-8 col-lg-7">
+            <h1 class="mb-4">{% if object %}Edit {{ object.name }}{% else %}Create your cat{% endif %}</h1>
 
-            <div class="mb-3">
-                <label class="form-label d-block">Pick a coat color</label>
-                <div id="colorPalette" class="d-flex align-items-center flex-wrap">
-                    <span class="swatch active" style="background:#3D2B1F;" data-color="#3D2B1F" data-value="ink_brown"></span>
-                    <span class="swatch" style="background:#FBF3E7; box-shadow:0 0 0 1px #ccc;" data-color="#FBF3E7" data-value="cream"></span>
-                    <span class="swatch" style="background:#C97D5D;" data-color="#C97D5D" data-value="terracotta"></span>
-                    <span class="swatch" style="background:#A6543B;" data-color="#A6543B" data-value="rust"></span>
-                    <span class="swatch" style="background:#8FA07E;" data-color="#8FA07E" data-value="sage"></span>
-                    <span class="swatch" style="background:#E0A458;" data-color="#E0A458" data-value="honey"></span>
-                    <span class="swatch" style="background:#D19C97;" data-color="#D19C97" data-value="dusty_rose"></span>
-                    <span class="swatch" style="background:#111;" data-color="#111111" data-value="classic"></span>
+            <div class="card p-4 mb-4">
+                <div class="mb-3">
+                    <label class="form-label fw-bold d-block">Pick a stroke color</label>
+                    <div id="colorPalette" class="d-flex align-items-center flex-wrap gap-1">
+                        <!-- Periwinkle / Navy Accent Theme Swatches -->
+                        <span class="swatch active" style="background:#2A3B8F;" data-color="#2A3B8F" data-value="deep_blue" title="Deep Blue"></span>
+                        <span class="swatch" style="background:#4E73F8;" data-color="#4E73F8" data-value="periwinkle" title="Periwinkle"></span>
+                        <span class="swatch" style="background:#A39BD6;" data-color="#A39BD6" data-value="dusty_violet" title="Dusty Violet"></span>
+                        <span class="swatch" style="background:#78C8AA;" data-color="#78C8AA" data-value="mint" title="Mint"></span>
+                        <span class="swatch" style="background:#E89BB2;" data-color="#E89BB2" data-value="rose" title="Rose"></span>
+                        <span class="swatch" style="background:#E0A458;" data-color="#E0A458" data-value="honey" title="Honey"></span>
+                        <span class="swatch" style="background:#3D2B1F;" data-color="#3D2B1F" data-value="ink_brown" title="Ink Brown"></span>
+                        <span class="swatch" style="background:#111111;" data-color="#111111" data-value="classic" title="Classic Black"></span>
+                    </div>
+                </div>
+
+                <canvas id="catCanvas" width="400" height="400" class="mb-3 align-self-center"
+                        {% if object %}data-existing-image="{{ object.drawing_image.url }}" data-existing-color="{{ object.coat_color }}"{% endif %}></canvas>
+                
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <button type="button" id="undoStroke" class="btn btn-sm btn-outline-secondary" disabled title="Undo last stroke" aria-label="Undo last stroke">↺</button>
+                    <button type="button" id="clearCanvas" class="btn btn-sm btn-outline-secondary">Clear</button>
+                    {% if object %}
+                        <span class="text-muted small ms-auto">Existing drawing loaded — draw on top or click Clear</span>
+                    {% endif %}
                 </div>
             </div>
 
-            <canvas id="catCanvas" width="400" height="400" class="mb-2"
-                    {% if object %}data-existing-image="{{ object.drawing_image.url }}" data-existing-color="{{ object.coat_color }}"{% endif %}></canvas>
-            <div class="mb-4">
-                <button type="button" id="undoStroke" class="btn btn-sm btn-outline-secondary" disabled title="Undo last stroke" aria-label="Undo last stroke">↺</button>
-                <button type="button" id="clearCanvas" class="btn btn-sm btn-outline-secondary">Clear</button>
-                {% if object %}
-                    <span class="text-muted small ms-2">Your existing drawing is loaded — draw on top, or Clear to start fresh</span>
-                {% endif %}
-            </div>
-
-            <form method="post" enctype="multipart/form-data" id="catForm">
+            <form method="post" enctype="multipart/form-data" id="catForm" class="card p-4">
                 {% csrf_token %}
 
                 <div class="mb-3">
-                    <label class="form-label">Name</label>
+                    <label class="form-label fw-bold">Name</label>
                     {{ form.name }}
                 </div>
+                
                 <div class="mb-3">
-                    <label class="form-label">Personality</label>
+                    <label class="form-label fw-bold">Personality</label>
                     {{ form.personality }}
                 </div>
 
                 <!-- Hidden fields populated by JS before submit -->
-                <input type="hidden" name="coat_color" id="coatColorInput" value="ink_brown">
+                <input type="hidden" name="coat_color" id="coatColorInput" value="deep_blue">
                 <input type="file" name="drawing_image" id="drawingImageInput" style="display:none;">
 
-                <div class="form-check mb-3">
+                <div class="form-check mb-4">
                     {{ form.is_public }}
-                    <label class="form-check-label" for="{{ form.is_public.id_for_label }}">
+                    <label class="form-check-label text-muted" for="{{ form.is_public.id_for_label }}">
                         Show this cat in the public scene and gallery
                     </label>
                 </div>
 
-                <button type="submit" class="btn btn-primary">
-                    {% if object %}Save changes{% else %}Add to the manor{% endif %}
-                </button>
-                <a href="{% url 'my_cats' %}" class="btn btn-link">Cancel</a>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="submit" class="btn btn-primary px-4">
+                        {% if object %}Save changes{% else %}Add to the manor{% endif %}
+                    </button>
+                    <a href="{% url 'my_cats' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
             </form>
         </div>
     </div>
@@ -99,12 +128,11 @@
     ctx.lineWidth = 7;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    let currentColor = '#3D2B1F';
-    let currentCoatValue = 'ink_brown';
+    let currentColor = '#2A3B8F';
+    let currentCoatValue = 'deep_blue';
     let drawing = false;
 
-    // Undo history: snapshot the canvas before each new stroke so a
-    // single mistake can be stepped back without clearing everything
+    // Undo stack setup
     const undoStack = [];
     const MAX_UNDO_STEPS = 20;
     const undoBtn = document.getElementById('undoStroke');
@@ -122,23 +150,23 @@
         if (undoStack.length === 0) undoBtn.disabled = true;
     });
 
-    // If editing an existing cat, load its current drawing onto the
-    // canvas first so submitting without redrawing doesn't wipe it out
+    // Load existing cat image baseline
     const existingImageUrl = canvas.dataset.existingImage;
     if (existingImageUrl) {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            saveUndoState(); // baseline state to undo back to
-            undoBtn.disabled = true; // nothing to undo until they draw something new
+            saveUndoState();
+            undoBtn.disabled = true;
         };
         img.src = existingImageUrl;
     } else {
-        saveUndoState(); // blank baseline for a brand new cat
+        saveUndoState();
         undoBtn.disabled = true;
     }
 
+    // Swatch selection setup
     document.querySelectorAll('.swatch').forEach((swatch) => {
         swatch.addEventListener('click', () => {
             document.querySelectorAll('.swatch').forEach((s) => s.classList.remove('active'));
@@ -149,7 +177,7 @@
         });
     });
 
-    // On edit, pre-select the swatch matching this cat's saved coat color
+    // Pre-select saved color swatch on edit
     const existingColor = canvas.dataset.existingColor;
     if (existingColor) {
         const matchingSwatch = document.querySelector(`.swatch[data-value="${existingColor}"]`);
@@ -159,8 +187,6 @@
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
         const point = e.touches ? e.touches[0] : e;
-        // Scale factor accounts for the canvas being displayed smaller
-        // than its internal 400x400 resolution on narrow screens
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
         return {
@@ -176,6 +202,7 @@
         ctx.beginPath();
         ctx.moveTo(pos.x, pos.y);
     }
+    
     function draw(e) {
         if (!drawing) return;
         const pos = getPos(e);
@@ -184,6 +211,7 @@
         ctx.stroke();
         e.preventDefault();
     }
+
     function stopDraw() { drawing = false; }
 
     canvas.addEventListener('mousedown', startDraw);
@@ -195,11 +223,11 @@
     canvas.addEventListener('touchend', stopDraw);
 
     document.getElementById('clearCanvas').addEventListener('click', () => {
-        saveUndoState(); // let Clear itself be undoable too
+        saveUndoState();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 
-    // Convert the canvas drawing to a file and attach it before submitting
+    // Submit payload construction
     document.getElementById('catForm').addEventListener('submit', function (e) {
         e.preventDefault();
         canvas.toBlob((blob) => {
