@@ -1,3 +1,5 @@
+import base64
+from django.core.files.base import ContentFile
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -103,22 +105,48 @@ class CatDetailView(DetailView):
 
 class CatCreateView(LoginRequiredMixin, CreateView):
     model = Cat
-    fields = ['name', 'personality', 'coat_color', 'drawing_image', 'is_public']
+    fields = ['name', 'personality', 'coat_color', 'is_public']
     template_name = 'cats/cat_form.html'
     success_url = reverse_lazy('scene')
 
     def form_valid(self, form):
         form.instance.owner = self.request.user
+        
+        # Decode and save the Base64 canvas drawing string
+        image_data = self.request.POST.get('drawing_image_data')
+        if image_data and 'base64,' in image_data:
+            format, imgstr = image_data.split(';base64,')
+            ext = format.split('/')[-1]
+            form.instance.drawing_image.save(
+                f"cat_drawing.{ext}", 
+                ContentFile(base64.b64decode(imgstr)), 
+                save=False
+            )
+            
         return super().form_valid(form)
 
 
 class CatUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Cat
-    fields = ['name', 'personality', 'coat_color', 'drawing_image', 'is_public']
+    fields = ['name', 'personality', 'coat_color', 'is_public']
     template_name = 'cats/cat_form.html'
 
     def test_func(self):
         return self.get_object().owner == self.request.user
+
+    def form_valid(self, form):
+        # Decode and save the Base64 canvas drawing string
+        image_data = self.request.POST.get('drawing_image_data')
+        if image_data and 'base64,' in image_data:
+            format, imgstr = image_data.split(';base64,')
+            ext = format.split('/')[-1]
+            form.instance.drawing_image.save(
+                f"cat_drawing.{ext}", 
+                ContentFile(base64.b64decode(imgstr)), 
+                save=False
+            )
+            
+        return super().form_valid(form)
 
     def get_success_url(self):
         return reverse('cat_detail', kwargs={'pk': self.object.pk})

@@ -98,10 +98,8 @@
                 <form method="post" enctype="multipart/form-data" id="catForm">
                     {% csrf_token %}
 
-                    <!-- Render Django's actual drawing_image field invisibly so form.is_valid() accepts it -->
-                    <div class="d-none">
-                        {{ form.drawing_image }}
-                    </div>
+                    <!-- Hidden input to carry base64 canvas drawing string -->
+                    <input type="hidden" name="drawing_image_data" id="id_drawing_image_data">
 
                     <div class="mb-3">
                         <label class="form-label">Name</label>
@@ -163,7 +161,7 @@
         if (undoStack.length === 0) undoBtn.disabled = true;
     });
 
-    // Load existing drawing if available
+    // If editing an existing cat, load its current drawing onto the canvas
     const existingImageUrl = canvas.dataset.existingImage;
     if (existingImageUrl) {
         const img = new Image();
@@ -236,7 +234,7 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 
-    // Form submission binding to Django's generated file input field
+    // Standard Form Submission with Base64 String Encoding
     const catForm = document.getElementById('catForm');
     catForm.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -245,19 +243,12 @@
         submitBtn.disabled = true;
         submitBtn.textContent = 'Saving...';
 
-        canvas.toBlob((blob) => {
-            const file = new File([blob], "cat-drawing.png", { type: "image/png" });
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            
-            // Find Django's actual file input (usually named id_drawing_image)
-            const fileInput = document.querySelector('input[type="file"]');
-            if (fileInput) {
-                fileInput.files = dataTransfer.files;
-            }
+        // Convert canvas to a Base64 string and store it in the hidden input
+        const dataURL = canvas.toDataURL('image/png');
+        document.getElementById('id_drawing_image_data').value = dataURL;
 
-            catForm.submit();
-        }, 'image/png');
+        // Submit form normally
+        catForm.submit();
     });
 </script>
 {% endblock %}
