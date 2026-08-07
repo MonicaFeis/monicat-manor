@@ -75,17 +75,17 @@
                         <span class="swatch active" style="background:#2A3B8F;" data-color="#2A3B8F" data-value="ink_brown"></span>
                         <span class="swatch" style="background:#F5F3FE; box-shadow:0 0 0 1px var(--dusty-violet);" data-color="#F5F3FE" data-value="cream"></span>
                         <span class="swatch" style="background:#E89BB2;" data-color="#E89BB2" data-value="terracotta"></span>
-                        <span class="swatch" style="background:#A39BD6;" data-color="#A39BD6" data-value="rust"></span>
+                        <span class="swatch" style="background:#7B6FD6;" data-color="#7B6FD6" data-value="rust"></span>
                         <span class="swatch" style="background:#78C8AA;" data-color="#78C8AA" data-value="sage"></span>
                         <span class="swatch" style="background:#4E73F8;" data-color="#4E73F8" data-value="honey"></span>
-                        <span class="swatch" style="background:#D9A05B;" data-color="#D9A05B" data-value="caramel"></span>
-                        <span class="swatch" style="background:#5C4033;" data-color="#5C4033" data-value="chocolate"></span>
+                        <span class="swatch" style="background:#C9C0F5;" data-color="#C9C0F5" data-value="dusty_rose"></span>
+                        <span class="swatch" style="background:#1A2560;" data-color="#1A2560" data-value="classic"></span>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <canvas id="catCanvas" width="400" height="400"
-                            {% if object and object.drawing_image %}data-existing-image="{{ object.drawing_image.url }}" data-existing-color="{{ object.coat_color }}"{% endif %}></canvas>
+                            {% if object %}data-existing-image="{{ object.drawing_image.url }}" data-existing-color="{{ object.coat_color }}"{% endif %}></canvas>
                 </div>
                 <div class="mb-4 d-flex align-items-center flex-wrap gap-2">
                     <button type="button" id="undoStroke" class="btn btn-sm btn-outline-secondary" disabled title="Undo last stroke" aria-label="Undo last stroke">↺</button>
@@ -98,11 +98,6 @@
                 <form method="post" enctype="multipart/form-data" id="catForm">
                     {% csrf_token %}
 
-                    <!-- Render Django's drawing_image field invisibly so form validation passes -->
-                    <div class="d-none">
-                        {{ form.drawing_image }}
-                    </div>
-
                     <div class="mb-3">
                         <label class="form-label">Name</label>
                         {{ form.name }}
@@ -112,6 +107,7 @@
                         {{ form.personality }}
                     </div>
 
+                    <!-- Hidden field populated by JS just before submit -->
                     <input type="hidden" name="coat_color" id="coatColorInput" value="ink_brown">
 
                     <div class="form-check mb-4">
@@ -144,7 +140,8 @@
     let currentCoatValue = 'ink_brown';
     let drawing = false;
 
-    // Undo history
+    // Undo history: snapshot the canvas before each new stroke so a
+    // single mistake can be stepped back without clearing everything
     const undoStack = [];
     const MAX_UNDO_STEPS = 20;
     const undoBtn = document.getElementById('undoStroke');
@@ -162,6 +159,8 @@
         if (undoStack.length === 0) undoBtn.disabled = true;
     });
 
+    // If editing an existing cat, load its current drawing onto the
+    // canvas first so submitting without redrawing doesn't wipe it out
     const existingImageUrl = canvas.dataset.existingImage;
     if (existingImageUrl) {
         const img = new Image();
@@ -234,26 +233,44 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 
+    // Submit directly via fetch with the blob attached to FormData.
+    // The previous approach (assign blob to a hidden file input via
+    // DataTransfer, then call form.submit()) was unreliable across
+    // browsers and was causing the two-click bug.
     const catForm = document.getElementById('catForm');
     catForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
         const submitBtn = catForm.querySelector('button[type="submit"]');
+        if (submitBtn.disabled) return; // guard against double-submit
         submitBtn.disabled = true;
+        const originalBtnText = submitBtn.textContent;
         submitBtn.textContent = 'Saving...';
 
         canvas.toBlob((blob) => {
-            const file = new File([blob], "cat-drawing.png", { type: "image/png" });
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            
-            const fileInput = document.querySelector('input[type="file"]');
-            if (fileInput) {
-                fileInput.removeAttribute('required'); // Bypass browser focus block on hidden field
-                fileInput.files = dataTransfer.files;
-            }
+            const formData = new FormData(catForm);
+            formData.set('drawing_image', blob, 'cat-drawing.png');
 
-            catForm.submit();
+            fetch(catForm.action || window.location.href, {
+                method: 'POST',
+                body: formData,
+            })
+                .then((response) => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    } else {
+                        return response.text().then((html) => {
+                            document.open();
+                            document.write(html);
+                            document.close();
+                        });
+                    }
+                })
+                .catch(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                    alert('Something went wrong saving your cat. Please try again.');
+                });
         }, 'image/png');
     });
 </script>
