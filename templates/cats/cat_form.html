@@ -72,19 +72,14 @@
                 <div class="mb-4">
                     <label class="form-label d-block">Pick a coat color</label>
                     <div id="colorPalette" class="d-flex align-items-center flex-wrap">
-                        <!-- Deep Neutrals & Blues -->
-                        <span class="swatch active" style="background:var(--deep-blue);" data-color="#2A3B8F" data-value="deep_blue"></span>
-                        <span class="swatch" style="background:var(--periwinkle-blue);" data-color="#4E73F8" data-value="periwinkle_blue"></span>
-                        <span class="swatch" style="background:#2C3E50;" data-color="#2C3E50" data-value="slate_navy"></span>
-
-                        <!-- Purples & Pinks -->
-                        <span class="swatch" style="background:var(--dusty-violet);" data-color="#A39BD6" data-value="dusty_violet"></span>
-                        <span class="swatch" style="background:var(--lavender-mist); box-shadow:0 0 0 1px var(--dusty-violet);" data-color="#F5F3FE" data-value="lavender_mist"></span>
-                        <span class="swatch" style="background:var(--rose-accent);" data-color="#E89BB2" data-value="rose_accent"></span>
-
-                        <!-- Accents -->
-                        <span class="swatch" style="background:var(--mint-accent);" data-color="#78C8AA" data-value="mint_accent"></span>
-                        <span class="swatch" style="background:#E67E22;" data-color="#E67E22" data-value="warm_accent"></span>
+                        <span class="swatch active" style="background:#2A3B8F;" data-color="#2A3B8F" data-value="ink_brown"></span>
+                        <span class="swatch" style="background:#F5F3FE; box-shadow:0 0 0 1px var(--dusty-violet);" data-color="#F5F3FE" data-value="cream"></span>
+                        <span class="swatch" style="background:#E89BB2;" data-color="#E89BB2" data-value="terracotta"></span>
+                        <span class="swatch" style="background:#7B6FD6;" data-color="#7B6FD6" data-value="rust"></span>
+                        <span class="swatch" style="background:#78C8AA;" data-color="#78C8AA" data-value="sage"></span>
+                        <span class="swatch" style="background:#4E73F8;" data-color="#4E73F8" data-value="honey"></span>
+                        <span class="swatch" style="background:#C9C0F5;" data-color="#C9C0F5" data-value="dusty_rose"></span>
+                        <span class="swatch" style="background:#1A2560;" data-color="#1A2560" data-value="classic"></span>
                     </div>
                 </div>
 
@@ -239,9 +234,13 @@
     });
 
     // Submit directly via fetch with the blob attached to FormData.
-    // The previous approach (assign blob to a hidden file input via
-    // DataTransfer, then call form.submit()) was unreliable across
-    // browsers and was causing the two-click bug.
+    // On success this redirects to the scene/detail page as normal.
+    // On a validation failure, Django re-renders this same URL - rather
+    // than trying to inject that HTML into the already-running page
+    // (which crashes, since this page's own script variables like
+    // `const canvas` would collide with the freshly-parsed script),
+    // we just do a real navigation to response.url either way. That
+    // triggers a clean page load with no scope collisions.
     const catForm = document.getElementById('catForm');
     catForm.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -253,6 +252,13 @@
         submitBtn.textContent = 'Saving...';
 
         canvas.toBlob((blob) => {
+            if (!blob) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+                alert('Could not read the drawing - please try again.');
+                return;
+            }
+
             const formData = new FormData(catForm);
             formData.set('drawing_image', blob, 'cat-drawing.png');
 
@@ -261,15 +267,7 @@
                 body: formData,
             })
                 .then((response) => {
-                    if (response.redirected) {
-                        window.location.href = response.url;
-                    } else {
-                        return response.text().then((html) => {
-                            document.open();
-                            document.write(html);
-                            document.close();
-                        });
-                    }
+                    window.location.href = response.url;
                 })
                 .catch(() => {
                     submitBtn.disabled = false;
