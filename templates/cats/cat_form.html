@@ -249,6 +249,7 @@
             
             const fileInput = document.querySelector('input[type="file"]');
             if (fileInput) {
+                fileInput.removeAttribute('required'); // Bypass browser focus block on hidden field
                 fileInput.files = dataTransfer.files;
             }
 
