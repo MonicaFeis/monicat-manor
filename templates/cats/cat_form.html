@@ -78,8 +78,9 @@
                         <span class="swatch" style="background:#A39BD6;" data-color="#A39BD6" data-value="rust"></span>
                         <span class="swatch" style="background:#78C8AA;" data-color="#78C8AA" data-value="sage"></span>
                         <span class="swatch" style="background:#4E73F8;" data-color="#4E73F8" data-value="honey"></span>
-                        <span class="swatch" style="background:#E9E6FB;" data-color="#E9E6FB" data-value="dusty_rose"></span>
-                        <span class="swatch" style="background:#2A3B8F;" data-color="#2A3B8F" data-value="classic"></span>
+                        <!-- Replaced similar/duplicate swatches with distinct new tones -->
+                        <span class="swatch" style="background:#D9A05B;" data-color="#D9A05B" data-value="caramel"></span>
+                        <span class="swatch" style="background:#5C4033;" data-color="#5C4033" data-value="chocolate"></span>
                     </div>
                 </div>
 
@@ -97,6 +98,9 @@
 
                 <form method="post" enctype="multipart/form-data" id="catForm">
                     {% csrf_token %}
+
+                    <!-- Hidden file input to hold the canvas drawing for standard submission -->
+                    <input type="file" name="drawing_image" id="id_drawing_image" class="d-none">
 
                     <div class="mb-3">
                         <label class="form-label">Name</label>
@@ -140,8 +144,7 @@
     let currentCoatValue = 'ink_brown';
     let drawing = false;
 
-    // Undo history: snapshot the canvas before each new stroke so a
-    // single mistake can be stepped back without clearing everything
+    // Undo history: snapshot the canvas before each new stroke
     const undoStack = [];
     const MAX_UNDO_STEPS = 20;
     const undoBtn = document.getElementById('undoStroke');
@@ -159,8 +162,7 @@
         if (undoStack.length === 0) undoBtn.disabled = true;
     });
 
-    // If editing an existing cat, load its current drawing onto the
-    // canvas first so submitting without redrawing doesn't wipe it out
+    // If editing an existing cat, load its current drawing onto the canvas
     const existingImageUrl = canvas.dataset.existingImage;
     if (existingImageUrl) {
         const img = new Image();
@@ -233,44 +235,25 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 
-    // Submit directly via fetch with the blob attached to FormData.
-    // The previous approach (assign blob to a hidden file input via
-    // DataTransfer, then call form.submit()) was unreliable across
-    // browsers and was causing the two-click bug.
+    // Standard Form Submission Handling
     const catForm = document.getElementById('catForm');
     catForm.addEventListener('submit', function (e) {
-        e.preventDefault();
+        e.preventDefault(); // Pause submission momentarily to capture canvas
 
         const submitBtn = catForm.querySelector('button[type="submit"]');
-        if (submitBtn.disabled) return; // guard against double-submit
         submitBtn.disabled = true;
-        const originalBtnText = submitBtn.textContent;
         submitBtn.textContent = 'Saving...';
 
+        // Convert canvas to a file and pack it into the hidden file input
         canvas.toBlob((blob) => {
-            const formData = new FormData(catForm);
-            formData.set('drawing_image', blob, 'cat-drawing.png');
+            const file = new File([blob], "cat-drawing.png", { type: "image/png" });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            
+            document.getElementById('id_drawing_image').files = dataTransfer.files;
 
-            fetch(catForm.action || window.location.href, {
-                method: 'POST',
-                body: formData,
-            })
-                .then((response) => {
-                    if (response.redirected) {
-                        window.location.href = response.url;
-                    } else {
-                        return response.text().then((html) => {
-                            document.open();
-                            document.write(html);
-                            document.close();
-                        });
-                    }
-                })
-                .catch(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalBtnText;
-                    alert('Something went wrong saving your cat. Please try again.');
-                });
+            // Submit form normally to Django
+            catForm.submit();
         }, 'image/png');
     });
 </script>
