@@ -38,6 +38,15 @@
         70% { opacity: 1; }
         100% { transform: translateY(-40px) scale(1.3); opacity: 0; }
     }
+
+    /* Modal footer: force consistent centered wrapping so buttons never
+       float awkwardly on their own line at any screen width */
+    #catModal .modal-footer {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
 </style>
 {% endblock %}
 
@@ -51,9 +60,6 @@
     <div class="scene-wrapper">
         <div class="scene-bg time-day" id="sceneBg"></div>
         {% if cats %}
-            {% if cats|length > 5 %}
-                <div class="scroll-hint">↔ swipe to see more cats</div>
-            {% endif %}
             <div class="cat-row">
                 {% for cat in cats %}
                     <div class="cat-sprite-wrap"
@@ -103,16 +109,24 @@
                 <span class="icon-btn-icon">🐱</span>
                 <span>Create a cat</span>
             </a>
+            <a href="{% url 'gallery' %}" class="icon-btn secondary">
+                <span class="icon-btn-icon">🖼️</span>
+                <span>Gallery</span>
+            </a>
         {% else %}
+            <a href="{% url 'login' %}" class="icon-btn secondary">
+                <span class="icon-btn-icon">🔑</span>
+                <span>Log in</span>
+            </a>
             <a href="{% url 'signup' %}" class="icon-btn">
                 <span class="icon-btn-icon">🐱</span>
-                <span>Join in</span>
+                <span>Join the Manor</span>
+            </a>
+            <a href="{% url 'gallery' %}" class="icon-btn secondary">
+                <span class="icon-btn-icon">🖼️</span>
+                <span>Gallery</span>
             </a>
         {% endif %}
-        <a href="{% url 'gallery' %}" class="icon-btn secondary">
-            <span class="icon-btn-icon">🖼️</span>
-            <span>Gallery</span>
-        </a>
     </div>
 
     {% csrf_token %}
@@ -132,7 +146,7 @@
                         <a href="#" id="catModalDeleteLink" class="btn btn-sm btn-outline-danger">🗑️ Delete</a>
                     </div>
                 </div>
-                <div class="modal-footer flex-wrap">
+                <div class="modal-footer">
                     {% if user.is_authenticated %}
                         <button type="button" id="catModalPaw" class="btn btn-outline-secondary btn-sm paw-btn position-relative" title="A permanent favorite - never resets">
                             🐾 Favorite (<span id="catModalPawCount">0</span>)

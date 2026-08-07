@@ -73,13 +73,13 @@
                     <label class="form-label d-block">Pick a coat color</label>
                     <div id="colorPalette" class="d-flex align-items-center flex-wrap">
                         <span class="swatch active" style="background:#2A3B8F;" data-color="#2A3B8F" data-value="ink_brown"></span>
-                        <span class="swatch" style="background:#5B2385;" data-color="#5B2385" data-value="dark_purple"></span>
                         <span class="swatch" style="background:#F5F3FE; box-shadow:0 0 0 1px var(--dusty-violet);" data-color="#F5F3FE" data-value="cream"></span>
                         <span class="swatch" style="background:#E89BB2;" data-color="#E89BB2" data-value="terracotta"></span>
                         <span class="swatch" style="background:#A39BD6;" data-color="#A39BD6" data-value="rust"></span>
                         <span class="swatch" style="background:#78C8AA;" data-color="#78C8AA" data-value="sage"></span>
                         <span class="swatch" style="background:#4E73F8;" data-color="#4E73F8" data-value="honey"></span>
-                        <span class="swatch" style="background:#044a3a;" data-color="#044a3a" data-value="teal"></span>
+                        <span class="swatch" style="background:#E9E6FB;" data-color="#E9E6FB" data-value="dusty_rose"></span>
+                        <span class="swatch" style="background:#2A3B8F;" data-color="#2A3B8F" data-value="classic"></span>
                     </div>
                 </div>
 
@@ -107,9 +107,8 @@
                         {{ form.personality }}
                     </div>
 
-                    <!-- Hidden fields populated by JS before submit -->
+                    <!-- Hidden field populated by JS just before submit -->
                     <input type="hidden" name="coat_color" id="coatColorInput" value="ink_brown">
-                    <input type="file" name="drawing_image" id="drawingImageInput" style="display:none;">
 
                     <div class="form-check mb-4">
                         {{ form.is_public }}
@@ -168,12 +167,12 @@
         img.crossOrigin = 'anonymous';
         img.onload = () => {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            saveUndoState(); // baseline state to undo back to
-            undoBtn.disabled = true; // nothing to undo until they draw something new
+            saveUndoState();
+            undoBtn.disabled = true;
         };
         img.src = existingImageUrl;
     } else {
-        saveUndoState(); // blank baseline for a brand new cat
+        saveUndoState();
         undoBtn.disabled = true;
     }
 
@@ -187,7 +186,6 @@
         });
     });
 
-    // On edit, pre-select the swatch matching this cat's saved coat color
     const existingColor = canvas.dataset.existingColor;
     if (existingColor) {
         const matchingSwatch = document.querySelector(`.swatch[data-value="${existingColor}"]`);
@@ -197,8 +195,6 @@
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
         const point = e.touches ? e.touches[0] : e;
-        // Scale factor accounts for the canvas being displayed smaller
-        // than its internal 400x400 resolution on narrow screens
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
         return {
@@ -233,20 +229,49 @@
     canvas.addEventListener('touchend', stopDraw);
 
     document.getElementById('clearCanvas').addEventListener('click', () => {
-        saveUndoState(); // let Clear itself be undoable too
+        saveUndoState();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 
-    // Convert the canvas drawing to a file and attach it before submitting
-    document.getElementById('catForm').addEventListener('submit', function (e) {
+    // Submit directly via fetch with the blob attached to FormData.
+    // The previous approach (assign blob to a hidden file input via
+    // DataTransfer, then call form.submit()) was unreliable across
+    // browsers and was causing the two-click bug.
+    const catForm = document.getElementById('catForm');
+    catForm.addEventListener('submit', function (e) {
         e.preventDefault();
+
+        const submitBtn = catForm.querySelector('button[type="submit"]');
+        if (submitBtn.disabled) return; // guard against double-submit
+        submitBtn.disabled = true;
+        const originalBtnText = submitBtn.textContent;
+        submitBtn.textContent = 'Saving...';
+
         canvas.toBlob((blob) => {
-            const file = new File([blob], 'cat-drawing.png', { type: 'image/png' });
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            document.getElementById('drawingImageInput').files = dataTransfer.files;
-            this.submit();
-        });
+            const formData = new FormData(catForm);
+            formData.set('drawing_image', blob, 'cat-drawing.png');
+
+            fetch(catForm.action || window.location.href, {
+                method: 'POST',
+                body: formData,
+            })
+                .then((response) => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    } else {
+                        return response.text().then((html) => {
+                            document.open();
+                            document.write(html);
+                            document.close();
+                        });
+                    }
+                })
+                .catch(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                    alert('Something went wrong saving your cat. Please try again.');
+                });
+        }, 'image/png');
     });
 </script>
 {% endblock %}
