@@ -98,8 +98,10 @@
                 <form method="post" enctype="multipart/form-data" id="catForm">
                     {% csrf_token %}
 
-                    <!-- Hidden input to carry base64 canvas drawing string -->
-                    <input type="hidden" name="drawing_image_data" id="id_drawing_image_data">
+                    <!-- Render Django's drawing_image field invisibly so form validation passes -->
+                    <div class="d-none">
+                        {{ form.drawing_image }}
+                    </div>
 
                     <div class="mb-3">
                         <label class="form-label">Name</label>
@@ -110,7 +112,6 @@
                         {{ form.personality }}
                     </div>
 
-                    <!-- Hidden field populated by JS just before submit -->
                     <input type="hidden" name="coat_color" id="coatColorInput" value="ink_brown">
 
                     <div class="form-check mb-4">
@@ -161,7 +162,6 @@
         if (undoStack.length === 0) undoBtn.disabled = true;
     });
 
-    // If editing an existing cat, load its current drawing onto the canvas
     const existingImageUrl = canvas.dataset.existingImage;
     if (existingImageUrl) {
         const img = new Image();
@@ -234,7 +234,6 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 
-    // Standard Form Submission with Base64 String Encoding
     const catForm = document.getElementById('catForm');
     catForm.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -243,12 +242,18 @@
         submitBtn.disabled = true;
         submitBtn.textContent = 'Saving...';
 
-        // Convert canvas to a Base64 string and store it in the hidden input
-        const dataURL = canvas.toDataURL('image/png');
-        document.getElementById('id_drawing_image_data').value = dataURL;
+        canvas.toBlob((blob) => {
+            const file = new File([blob], "cat-drawing.png", { type: "image/png" });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            
+            const fileInput = document.querySelector('input[type="file"]');
+            if (fileInput) {
+                fileInput.files = dataTransfer.files;
+            }
 
-        // Submit form normally
-        catForm.submit();
+            catForm.submit();
+        }, 'image/png');
     });
 </script>
 {% endblock %}
