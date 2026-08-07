@@ -74,12 +74,12 @@
                     <div id="colorPalette" class="d-flex align-items-center flex-wrap">
                         <span class="swatch active" style="background:#2A3B8F;" data-color="#2A3B8F" data-value="ink_brown"></span>
                         <span class="swatch" style="background:#F5F3FE; box-shadow:0 0 0 1px var(--dusty-violet);" data-color="#F5F3FE" data-value="cream"></span>
-                        <span class="swatch" style="background:#E89BB2;" data-color="#E89BB2" data-value="terracotta"></span>
-                        <span class="swatch" style="background:#7B6FD6;" data-color="#7B6FD6" data-value="rust"></span>
-                        <span class="swatch" style="background:#78C8AA;" data-color="#78C8AA" data-value="sage"></span>
+                        <span class="swatch" style="background:#E8798F;" data-color="#E8798F" data-value="terracotta"></span>
+                        <span class="swatch" style="background:#E8965A;" data-color="#E8965A" data-value="rust"></span>
+                        <span class="swatch" style="background:#6FCF97;" data-color="#6FCF97" data-value="sage"></span>
                         <span class="swatch" style="background:#4E73F8;" data-color="#4E73F8" data-value="honey"></span>
-                        <span class="swatch" style="background:#C9C0F5;" data-color="#C9C0F5" data-value="dusty_rose"></span>
-                        <span class="swatch" style="background:#1A2560;" data-color="#1A2560" data-value="classic"></span>
+                        <span class="swatch" style="background:#B39DDB;" data-color="#B39DDB" data-value="dusty_rose"></span>
+                        <span class="swatch" style="background:#1A1A2E;" data-color="#1A1A2E" data-value="classic"></span>
                     </div>
                 </div>
 
@@ -132,7 +132,7 @@
 {% block extra_js %}
 <script>
     const canvas = document.getElementById('catCanvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     ctx.lineWidth = 7;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
