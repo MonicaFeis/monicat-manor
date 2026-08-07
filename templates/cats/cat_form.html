@@ -78,7 +78,6 @@
                         <span class="swatch" style="background:#A39BD6;" data-color="#A39BD6" data-value="rust"></span>
                         <span class="swatch" style="background:#78C8AA;" data-color="#78C8AA" data-value="sage"></span>
                         <span class="swatch" style="background:#4E73F8;" data-color="#4E73F8" data-value="honey"></span>
-                        <!-- Replaced similar/duplicate swatches with distinct new tones -->
                         <span class="swatch" style="background:#D9A05B;" data-color="#D9A05B" data-value="caramel"></span>
                         <span class="swatch" style="background:#5C4033;" data-color="#5C4033" data-value="chocolate"></span>
                     </div>
@@ -86,7 +85,7 @@
 
                 <div class="mb-3">
                     <canvas id="catCanvas" width="400" height="400"
-                            {% if object %}data-existing-image="{{ object.drawing_image.url }}" data-existing-color="{{ object.coat_color }}"{% endif %}></canvas>
+                            {% if object and object.drawing_image %}data-existing-image="{{ object.drawing_image.url }}" data-existing-color="{{ object.coat_color }}"{% endif %}></canvas>
                 </div>
                 <div class="mb-4 d-flex align-items-center flex-wrap gap-2">
                     <button type="button" id="undoStroke" class="btn btn-sm btn-outline-secondary" disabled title="Undo last stroke" aria-label="Undo last stroke">↺</button>
@@ -99,8 +98,10 @@
                 <form method="post" enctype="multipart/form-data" id="catForm">
                     {% csrf_token %}
 
-                    <!-- Hidden file input to hold the canvas drawing for standard submission -->
-                    <input type="file" name="drawing_image" id="id_drawing_image" class="d-none">
+                    <!-- Render Django's actual drawing_image field invisibly so form.is_valid() accepts it -->
+                    <div class="d-none">
+                        {{ form.drawing_image }}
+                    </div>
 
                     <div class="mb-3">
                         <label class="form-label">Name</label>
@@ -144,7 +145,7 @@
     let currentCoatValue = 'ink_brown';
     let drawing = false;
 
-    // Undo history: snapshot the canvas before each new stroke
+    // Undo history
     const undoStack = [];
     const MAX_UNDO_STEPS = 20;
     const undoBtn = document.getElementById('undoStroke');
@@ -162,7 +163,7 @@
         if (undoStack.length === 0) undoBtn.disabled = true;
     });
 
-    // If editing an existing cat, load its current drawing onto the canvas
+    // Load existing drawing if available
     const existingImageUrl = canvas.dataset.existingImage;
     if (existingImageUrl) {
         const img = new Image();
@@ -235,24 +236,26 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 
-    // Standard Form Submission Handling
+    // Form submission binding to Django's generated file input field
     const catForm = document.getElementById('catForm');
     catForm.addEventListener('submit', function (e) {
-        e.preventDefault(); // Pause submission momentarily to capture canvas
+        e.preventDefault();
 
         const submitBtn = catForm.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
         submitBtn.textContent = 'Saving...';
 
-        // Convert canvas to a file and pack it into the hidden file input
         canvas.toBlob((blob) => {
             const file = new File([blob], "cat-drawing.png", { type: "image/png" });
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(file);
             
-            document.getElementById('id_drawing_image').files = dataTransfer.files;
+            // Find Django's actual file input (usually named id_drawing_image)
+            const fileInput = document.querySelector('input[type="file"]');
+            if (fileInput) {
+                fileInput.files = dataTransfer.files;
+            }
 
-            // Submit form normally to Django
             catForm.submit();
         }, 'image/png');
     });
