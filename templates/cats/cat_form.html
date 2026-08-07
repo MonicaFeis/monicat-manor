@@ -62,6 +62,25 @@
         color: var(--deep-blue);
         font-weight: 500;
     }
+
+    /* Safety net for very narrow phones (iPhone SE and similar, ~375px) */
+    @media (max-width: 400px) {
+        .card {
+            padding: 1rem !important;
+        }
+        .swatch {
+            width: 26px;
+            height: 26px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+        #catCanvas {
+            max-width: 100%;
+        }
+        h1 {
+            font-size: 1.6rem;
+        }
+    }
 </style>
 {% endblock %}
 
