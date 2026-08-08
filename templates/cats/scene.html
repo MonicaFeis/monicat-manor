@@ -289,6 +289,14 @@
     if (petBtn) {
         petBtn.addEventListener('click', () => {
             if (!activePetUrl || petBtn.disabled) return;
+            // Disable immediately, before the network request even starts -
+            // otherwise rapid clicks fire multiple requests before the
+            // first response comes back, and the button stays clickable
+            // until the page is refreshed
+            petBtn.disabled = true;
+            petBtn.classList.add('petted');
+            petBtn.textContent = '💗 Petted today';
+
             fetch(activePetUrl, {
                 method: 'POST',
                 headers: {
@@ -298,10 +306,13 @@
             })
                 .then((res) => res.json())
                 .then(() => {
-                    petBtn.disabled = true;
-                    petBtn.classList.add('petted');
-                    petBtn.textContent = '💗 Petted today';
                     floatEmojiFrom(petBtn, '💗');
+                })
+                .catch(() => {
+                    // Request failed - re-enable so they can try again
+                    petBtn.disabled = false;
+                    petBtn.classList.remove('petted');
+                    petBtn.textContent = '💗 Pet today';
                 });
         });
     }
