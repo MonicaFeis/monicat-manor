@@ -35,7 +35,7 @@
         background: #FFFFFF;
         touch-action: none;
         width: 100%;
-        max-width: 560px;
+        max-width: 720px;
         height: auto;
         display: block;
         box-shadow: 0 4px 12px rgba(42, 59, 143, 0.05);
@@ -119,13 +119,20 @@
                 <form method="post" enctype="multipart/form-data" id="catForm">
                     {% csrf_token %}
 
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <div id="clientErrorBox" class="alert alert-danger" style="display:none;"></div>
+
                     <div class="mb-3">
                         <label class="form-label">Name</label>
                         {{ form.name }}
+                        {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors|striptags }}</div>{% endif %}
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Personality</label>
                         {{ form.personality }}
+                        {% if form.personality.errors %}<div class="text-danger small mt-1">{{ form.personality.errors|striptags }}</div>{% endif %}
                     </div>
 
                     <!-- Hidden field populated by JS just before submit -->
@@ -256,13 +263,14 @@
 
     // Submit directly via fetch with the blob attached to FormData.
     // On success this redirects to the scene/detail page as normal.
-    // On a validation failure, Django re-renders this same URL - rather
-    // than trying to inject that HTML into the already-running page
-    // (which crashes, since this page's own script variables like
-    // `const canvas` would collide with the freshly-parsed script),
-    // we just do a real navigation to response.url either way. That
-    // triggers a clean page load with no scope collisions.
+    // On a validation failure, Django re-renders this page with errors
+    // in the response body (not a redirect). We use DOMParser to safely
+    // read those errors out of the response text - DOMParser creates an
+    // inert document that never executes scripts, so it can't collide
+    // with this page's own script scope the way document.write did.
     const catForm = document.getElementById('catForm');
+    const clientErrorBox = document.getElementById('clientErrorBox');
+
     catForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
@@ -271,12 +279,14 @@
         submitBtn.disabled = true;
         const originalBtnText = submitBtn.textContent;
         submitBtn.textContent = 'Saving...';
+        clientErrorBox.style.display = 'none';
 
         canvas.toBlob((blob) => {
             if (!blob) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalBtnText;
-                alert('Could not read the drawing - please try again.');
+                clientErrorBox.textContent = 'Could not read your drawing - please try again.';
+                clientErrorBox.style.display = 'block';
                 return;
             }
 
@@ -287,13 +297,36 @@
                 method: 'POST',
                 body: formData,
             })
-                .then((response) => {
-                    window.location.href = response.url;
+                .then(async (response) => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+
+                    // Not redirected = validation failed. Read the actual
+                    // errors out of the response and show them.
+                    const html = await response.text();
+                    const parsed = new DOMParser().parseFromString(html, 'text/html');
+                    const errorEls = parsed.querySelectorAll('.errorlist li, .alert-danger, .text-danger');
+                    const messages = [];
+                    errorEls.forEach((el) => {
+                        const text = el.textContent.trim();
+                        if (text) messages.push(text);
+                    });
+
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                    clientErrorBox.textContent = messages.length
+                        ? messages.join(' · ')
+                        : 'Could not save your cat - please check the form and try again.';
+                    clientErrorBox.style.display = 'block';
+                    clientErrorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 })
                 .catch(() => {
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalBtnText;
-                    alert('Something went wrong saving your cat. Please try again.');
+                    clientErrorBox.textContent = 'A network problem stopped your cat from saving. Please try again.';
+                    clientErrorBox.style.display = 'block';
                 });
         }, 'image/png');
     });
