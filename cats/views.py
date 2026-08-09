@@ -77,6 +77,7 @@ class MyCatsView(LoginRequiredMixin, ListView):
     model = Cat
     template_name = 'cats/my_cats.html'
     context_object_name = 'cats'
+    paginate_by = 12
 
     def get_queryset(self):
         return Cat.objects.filter(owner=self.request.user)

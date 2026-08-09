@@ -26,21 +26,22 @@
         </div>
 
         {% if is_paginated %}
-            <nav class="mt-4">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
-                    {% endif %}
-                    <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
-                    {% if page_obj.has_next %}
-                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
-                    {% endif %}
-                </ul>
-            </nav>
+            <div class="scene-pagination-bar mt-4" style="border-top:none; border-radius:12px;">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="pagination-pill">&larr; Previous</a>
+                {% endif %}
+                <span class="pagination-current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="pagination-pill">Next &rarr;</a>
+                {% endif %}
+            </div>
         {% endif %}
     {% else %}
         <p class="text-muted">No cats to show yet.</p>
     {% endif %}
 
-    <a href="{% url 'scene' %}" class="btn btn-link mt-3">&larr; Back to the manor</a>
+    <a href="{% url 'scene' %}" class="icon-btn secondary mt-4">
+        <span class="icon-btn-icon">🏡</span>
+        <span>Back to the manor</span>
+    </a>
 {% endblock %}
