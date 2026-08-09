@@ -43,10 +43,23 @@
        float awkwardly on their own line at any screen width */
     #catModal .modal-footer {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         justify-content: center;
-        gap: 10px;
-        padding: 16px;
+        gap: 8px;
+        padding: 14px 10px;
+    }
+    #catModal .modal-footer .btn {
+        font-size: 0.82rem;
+        padding: 0.4rem 0.75rem;
+        white-space: nowrap;
+        flex: 1 1 0;
+        text-align: center;
+    }
+    @media (max-width: 400px) {
+        #catModal .modal-footer .btn {
+            font-size: 0.72rem;
+            padding: 0.35rem 0.4rem;
+        }
     }
     #catModal .modal-body {
         padding-bottom: 8px;
@@ -161,15 +174,15 @@
                 <div class="modal-footer">
                     {% if user.is_authenticated %}
                         <button type="button" id="catModalPaw" class="btn btn-outline-secondary btn-sm paw-btn position-relative" title="A permanent favorite - never resets">
-                            🐾 Favorite (<span id="catModalPawCount">0</span>)
+                            🐾 <span id="catModalPawCount">0</span>
                         </button>
                         <button type="button" id="catModalPet" class="btn btn-outline-secondary btn-sm pet-btn position-relative" title="Counts toward today's Cat of the Day - resets tomorrow">
-                            💗 Pet today
+                            💗 Pet
                         </button>
                     {% else %}
                         <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm">Log in to react</a>
                     {% endif %}
-                    <a href="#" id="catModalLink" class="btn btn-outline-secondary btn-sm">View full profile</a>
+                    <a href="#" id="catModalLink" class="btn btn-outline-secondary btn-sm">Profile</a>
                 </div>
                 {% if user.is_authenticated %}
                     <p class="text-muted small text-center mb-2">🐾 Favorite lasts forever · 💗 Pet counts toward today's Cat of the Day only</p>
@@ -197,7 +210,18 @@
         }
     })();
 
-    const catModal = new bootstrap.Modal(document.getElementById('catModal'));
+    const catModalEl = document.getElementById('catModal');
+    const catModal = new bootstrap.Modal(catModalEl);
+
+    // Bootstrap sets aria-hidden="true" on the modal as it starts closing,
+    // but if a button inside it (like the close button) still has focus
+    // at that moment, browsers correctly flag this as an accessibility
+    // conflict. Blurring first avoids it.
+    catModalEl.addEventListener('hide.bs.modal', () => {
+        if (document.activeElement && catModalEl.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
+    });
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const currentUsername = '{{ user.username|escapejs }}';
     let activeReactUrl = null;
@@ -258,7 +282,7 @@
                 const alreadyPetted = wrap.dataset.petted === 'true';
                 petBtn.disabled = alreadyPetted;
                 petBtn.classList.toggle('petted', alreadyPetted);
-                petBtn.textContent = alreadyPetted ? '💗 Petted today' : '💗 Pet today';
+                petBtn.textContent = alreadyPetted ? '💗 Petted' : '💗 Pet';
             }
 
             catModal.show();
@@ -295,7 +319,7 @@
             // until the page is refreshed
             petBtn.disabled = true;
             petBtn.classList.add('petted');
-            petBtn.textContent = '💗 Petted today';
+            petBtn.textContent = '💗 Petted';
 
             fetch(activePetUrl, {
                 method: 'POST',
@@ -312,7 +336,7 @@
                     // Request failed - re-enable so they can try again
                     petBtn.disabled = false;
                     petBtn.classList.remove('petted');
-                    petBtn.textContent = '💗 Pet today';
+                    petBtn.textContent = '💗 Pet';
                 });
         });
     }

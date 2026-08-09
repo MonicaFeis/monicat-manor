@@ -40,8 +40,10 @@
         <p class="text-muted">No cats to show yet.</p>
     {% endif %}
 
-    <a href="{% url 'scene' %}" class="icon-btn secondary mt-4">
-        <span class="icon-btn-icon">🏡</span>
-        <span>Back to the manor</span>
-    </a>
+    <div class="text-center mt-4">
+        <a href="{% url 'scene' %}" class="icon-btn secondary" style="display:inline-flex;">
+            <span class="icon-btn-icon">🏡</span>
+            <span>Back to the manor</span>
+        </a>
+    </div>
 {% endblock %}
