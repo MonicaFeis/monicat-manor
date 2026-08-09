@@ -14,7 +14,7 @@
                             <span class="gallery-crown" title="Cat of the Day">👑</span>
                         {% endif %}
                         <img src="{{ cat.drawing_image.url }}" class="card-img-top" alt="{{ cat.name }}"
-                             style="aspect-ratio: 1 / 1; width: 100%; object-fit: cover; border-radius: 12px 12px 0 0;">
+                             style="aspect-ratio: 1 / 1; width: 100%; object-fit: contain; background: #FFFFFF; border-radius: 12px 12px 0 0;">
                         <div class="card-body">
                             <h5 class="card-title">{{ cat.name }}</h5>
                             <p class="card-text text-muted small">{{ cat.personality|truncatewords:12 }}</p>
