@@ -226,6 +226,7 @@
     const currentUsername = '{{ user.username|escapejs }}';
     let activeReactUrl = null;
     let activePetUrl = null;
+    let activeWrap = null;
 
     const nameEmojis = ['🐱', '🐈', '😺', '😸'];
     const moodEmojis = ['😊', '😽', '🥰', '😌', '😻'];
@@ -271,6 +272,7 @@
 
             activeReactUrl = wrap.dataset.reactUrl;
             activePetUrl = wrap.dataset.petUrl;
+            activeWrap = wrap;
 
             const pawCountEl = document.getElementById('catModalPawCount');
             if (pawCountEl) pawCountEl.textContent = wrap.dataset.count;
@@ -321,6 +323,12 @@
             petBtn.classList.add('petted');
             petBtn.textContent = '💗 Petted';
 
+            // Also persist this onto the sprite itself - otherwise closing
+            // and reopening the SAME cat's popup (without a full page
+            // refresh) re-reads the original page-load value and resets
+            // the button back to clickable
+            if (activeWrap) activeWrap.dataset.petted = 'true';
+
             fetch(activePetUrl, {
                 method: 'POST',
                 headers: {
@@ -337,6 +345,7 @@
                     petBtn.disabled = false;
                     petBtn.classList.remove('petted');
                     petBtn.textContent = '💗 Pet';
+                    if (activeWrap) activeWrap.dataset.petted = 'false';
                 });
         });
     }

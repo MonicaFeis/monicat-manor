@@ -122,6 +122,15 @@
                     {% if form.non_field_errors %}
                         <div class="alert alert-danger">{{ form.non_field_errors }}</div>
                     {% endif %}
+                    {% if form.coat_color.errors %}
+                        <div class="alert alert-danger">Coat color: {{ form.coat_color.errors|striptags }}</div>
+                    {% endif %}
+                    {% if form.drawing_image.errors %}
+                        <div class="alert alert-danger">Drawing: {{ form.drawing_image.errors|striptags }}</div>
+                    {% endif %}
+                    {% if form.is_public.errors %}
+                        <div class="alert alert-danger">{{ form.is_public.errors|striptags }}</div>
+                    {% endif %}
                     <div id="clientErrorBox" class="alert alert-danger" style="display:none;"></div>
 
                     <div class="mb-3">

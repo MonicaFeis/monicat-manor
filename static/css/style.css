@@ -456,6 +456,11 @@ button.badge:hover {
     cursor: default;
 }
 
+.btn-sm {
+    padding: 0.3rem 0.85rem !important;
+    font-size: 0.8rem !important;
+}
+
 /* ---------- Responsive Adjustments ---------- */
 
 @media (max-width: 576px) {
