@@ -10,7 +10,7 @@
                 <p class="text-muted">This can't be undone. The drawing, comments, and reactions will all be removed.</p>
                 <form method="post">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger me-2">Yes, delete</button>
+                    <button type="submit" class="btn btn-danger me-2"> Yes, delete</button>
                     <a href="{% url 'cat_detail' object.pk %}" class="btn btn-outline-secondary">Cancel</a>
                 </form>
             </div>
