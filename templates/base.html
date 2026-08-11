@@ -51,10 +51,10 @@
                         <li class="nav-item ms-lg-2">
                             <span class="nav-link text-muted" style="cursor: default;">🙂 {{ user.username }}</span>
                         </li>
-                        <li class="nav-item">
+                        <li class="nav-item ms-lg-2">
                             <form method="post" action="{% url 'logout' %}" class="d-inline">
                                 {% csrf_token %}
-                                <button type="submit" class="nav-link btn btn-link p-0 border-0 align-baseline text-decoration-none">Log out</button>
+                                <button type="submit" class="btn btn-outline-secondary btn-sm">Log out</button>
                             </form>
                         </li>
                     {% else %}

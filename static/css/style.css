@@ -231,7 +231,6 @@ button.badge:hover {
 .scene-bg {
     position: absolute;
     inset: 0;
-    background-image: url("{% static 'images/manor-bg.png' %}");
     background-size: cover;
     background-position: center bottom;
     z-index: 0;
