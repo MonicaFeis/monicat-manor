@@ -464,7 +464,94 @@ button.badge:hover {
     font-size: 0.8rem !important;
 }
 
-/* ---------- Responsive Adjustments ---------- */
+/* Cat Form & Canvas Styling*/
+
+.swatch {
+    width: 32px; 
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #FFFFFF;
+    box-shadow: 0 0 0 1px var(--dusty-violet);
+    cursor: pointer;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.swatch:hover {
+    transform: scale(1.1);
+}
+
+.swatch.active { 
+    box-shadow: 0 0 0 3px var(--periwinkle-blue); 
+    transform: scale(1.05);
+}
+
+#undoStroke {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    line-height: 1;
+    width: 38px;
+    padding: 0.3rem 0;
+}
+
+#catCanvas {
+    border: 2px dashed var(--dusty-violet);
+    border-radius: 16px;
+    background: #FFFFFF;
+    touch-action: none;
+    width: 100%;
+    max-width: 720px;
+    height: auto;
+    display: block;
+    box-shadow: 0 4px 12px rgba(42, 59, 143, 0.05);
+}
+
+.form-label {
+    display: block;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    color: var(--deep-blue);
+    margin-bottom: 0.4rem;
+}
+
+.form-check-input {
+    border: 2px solid var(--dusty-violet);
+    width: 1.25em;
+    height: 1.25em;
+    margin-top: 0.15em;
+}
+
+.form-check-input:checked {
+    background-color: var(--periwinkle-blue);
+    border-color: var(--periwinkle-blue);
+}
+
+.form-check-label {
+    font-family: var(--font-body);
+    color: var(--deep-blue);
+    font-weight: 500;
+}
+
+@media (max-width: 400px) {
+    .card {
+        padding: 1rem !important;
+    }
+    .swatch {
+        width: 26px;
+        height: 26px;
+        margin-right: 6px;
+        margin-bottom: 6px;
+    }
+    #catCanvas {
+        max-width: 100%;
+    }
+    h1 {
+        font-size: 1.6rem;
+    }
+}
+
+/* ---------- Media Queries ---------- */
 
 @media (max-width: 576px) {
     h1 { font-size: 1.8rem; }
