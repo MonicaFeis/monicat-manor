@@ -6,7 +6,8 @@
 {% block main_class %}p-0{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- Preload the main manor scene image to fix LCP discovery on mobile -->
+    <link rel="preload" as="image" href="{% static 'images/scene-images/manor-scene-day.png' %}" fetchpriority="high">
 {% endblock %}
 
 {% block content %}
