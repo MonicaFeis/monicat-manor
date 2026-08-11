@@ -10,6 +10,9 @@
 {% endblock %}
 
 {% block content %}
+    <!-- High-priority preload so the browser discovers the LCP background image immediately -->
+    <link rel="preload" as="image" href="{% static 'images/manor-scene-day.png' %}" fetchpriority="high">
+
     {% if cat_of_the_day %}
         <div class="spotlight-banner">
             🌟 Cat of the Day: <strong>{{ cat_of_the_day.name }}</strong> The most petted cat in the manor today!
@@ -18,115 +21,4 @@
 
     <div class="scene-wrapper">
         <div class="scene-bg time-day" id="sceneBg"></div>
-        {% if cats %}
-            <div class="cat-row">
-                {% for cat in cats %}
-                    <div class="cat-sprite-wrap"
-                         data-id="{{ cat.pk }}"
-                         data-name="{{ cat.name }}"
-                         data-personality="{{ cat.personality }}"
-                         data-owner="{{ cat.owner.username }}"
-                         data-url="{% url 'cat_detail' cat.pk %}"
-                         data-edit-url="{% url 'cat_update' cat.pk %}"
-                         data-delete-url="{% url 'cat_delete' cat.pk %}"
-                         data-react-url="{% url 'cat_react' cat.pk %}"
-                         data-pet-url="{% url 'cat_pet' cat.pk %}"
-                         data-count="{{ cat.reactions.count }}"
-                         data-reacted="{% if cat.pk in reacted_cat_ids %}true{% else %}false{% endif %}"
-                         data-petted="{% if cat.pk in petted_cat_ids %}true{% else %}false{% endif %}">
-                        {% if cat_of_the_day and cat.pk == cat_of_the_day.pk %}
-                            <span class="crown-badge">👑</span>
-                        {% endif %}
-                        <img src="{{ cat.drawing_image.url }}" alt="{{ cat.name }}" class="cat-sprite">
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="scene-empty">
-                <p>No cats have joined the manor yet.</p>
-                {% if user.is_authenticated %}
-                    <a href="{% url 'cat_create' %}" class="btn btn-primary">Create the first cat</a>
-                {% endif %}
-            </div>
-        {% endif %}
-    </div>
-
-    {% if cats.has_other_pages %}
-        <div class="scene-pagination-bar">
-            {% if cats.has_previous %}
-                <a href="?page={{ cats.previous_page_number }}" class="pagination-pill">&larr; Previous</a>
-            {% endif %}
-            <span class="pagination-current">Page {{ cats.number }} of {{ cats.paginator.num_pages }}</span>
-            {% if cats.has_next %}
-                <a href="?page={{ cats.next_page_number }}" class="pagination-pill">Next &rarr;</a>
-            {% endif %}
-        </div>
-    {% endif %}
-
-    <div class="scene-toolbar">
-        {% if user.is_authenticated %}
-            <a href="{% url 'cat_create' %}" class="icon-btn">
-                <span class="icon-btn-icon">🐱</span>
-                <span>Create a cat</span>
-            </a>
-            <a href="{% url 'gallery' %}" class="icon-btn secondary">
-                <span class="icon-btn-icon">🖼️</span>
-                <span>Gallery</span>
-            </a>
-        {% else %}
-            <a href="{% url 'login' %}" class="icon-btn secondary">
-                <span class="icon-btn-icon">🔑</span>
-                <span>Log in</span>
-            </a>
-            <a href="{% url 'signup' %}" class="icon-btn">
-                <span class="icon-btn-icon">🐱</span>
-                <span>Join the Manor</span>
-            </a>
-        
-        {% endif %}
-    </div>
-
-    {% csrf_token %}
-
-    <div class="modal fade" id="catModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="catModalName"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="catModalPersonality"></p>
-                    <p class="text-muted small mb-0" id="catModalOwner"></p>
-                    <div id="catModalOwnerActions" style="display:none;">
-                        <a href="#" id="catModalEditLink" class="btn btn-sm btn-outline-secondary">✏️ Edit</a>
-                        <a href="#" id="catModalDeleteLink" class="btn btn-sm btn-outline-danger">🗑️ Delete</a>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    {% if user.is_authenticated %}
-                        <button type="button" id="catModalPaw" class="btn btn-outline-secondary btn-sm paw-btn position-relative" title="A permanent favorite - never resets">
-                            🐾 <span id="catModalPawCount">0</span>
-                        </button>
-                        <button type="button" id="catModalPet" class="btn btn-outline-secondary btn-sm pet-btn position-relative" title="Counts toward today's Cat of the Day - resets tomorrow">
-                            💗 Pet
-                        </button>
-                    {% else %}
-                        <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm">Log in to react</a>
-                    {% endif %}
-                    <a href="#" id="catModalLink" class="btn btn-outline-secondary btn-sm">Profile</a>
-                </div>
-                {% if user.is_authenticated %}
-                    <p class="text-muted small text-center mb-2">🐾 Favorite lasts forever · 💗 Pet counts toward today's Cat of the Day only</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    window.MANOR_CURRENT_USERNAME = '{{ user.username|escapejs }}';
-</script>
-<script src="{% static 'js/scene.js' %}"></script>
-{% endblock %}
+        ...
