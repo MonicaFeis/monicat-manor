@@ -7,15 +7,10 @@
 
 {% block extra_css %}
 <style>
-    /* Page-specific override: only the scene page needs the navbar's
-       normal bottom margin removed, so this stays local rather than
-       affecting every other page via the global stylesheet */
     .navbar {
         margin-bottom: 0 !important;
     }
 
-    /* These three rules need Django's static template tag, so they can't
-       live in the external stylesheet - everything else is in style.css */
     .scene-bg.time-day {
         background-image: url('{% static "images/manor-scene-day.png" %}');
     }
@@ -39,8 +34,6 @@
         100% { transform: translateY(-40px) scale(1.3); opacity: 0; }
     }
 
-    /* Modal footer: force consistent centered wrapping so buttons never
-       float awkwardly on their own line at any screen width */
     #catModal .modal-footer {
         display: flex;
         flex-wrap: nowrap;
@@ -98,6 +91,7 @@
                          data-react-url="{% url 'cat_react' cat.pk %}"
                          data-pet-url="{% url 'cat_pet' cat.pk %}"
                          data-count="{{ cat.reactions.count }}"
+                         data-reacted="{% if cat.pk in reacted_cat_ids %}true{% else %}false{% endif %}"
                          data-petted="{% if cat.pk in petted_cat_ids %}true{% else %}false{% endif %}">
                         {% if cat_of_the_day and cat.pk == cat_of_the_day.pk %}
                             <span class="crown-badge">👑</span>
@@ -213,10 +207,6 @@
     const catModalEl = document.getElementById('catModal');
     const catModal = new bootstrap.Modal(catModalEl);
 
-    // Bootstrap sets aria-hidden="true" on the modal as it starts closing,
-    // but if a button inside it (like the close button) still has focus
-    // at that moment, browsers correctly flag this as an accessibility
-    // conflict. Blurring first avoids it.
     catModalEl.addEventListener('hide.bs.modal', () => {
         if (document.activeElement && catModalEl.contains(document.activeElement)) {
             document.activeElement.blur();
@@ -236,8 +226,6 @@
         return list[index];
     }
 
-    // Shows a small emoji that floats up and fades out from a button,
-    // giving instant visual feedback on paw/pet actions
     function floatEmojiFrom(button, emoji) {
         const rect = button.getBoundingClientRect();
         const pop = document.createElement('span');
@@ -274,10 +262,13 @@
             activePetUrl = wrap.dataset.petUrl;
             activeWrap = wrap;
 
+            // Read straight from the sprite's own dataset each time the
+            // popup opens, so state set on a previous open (or from the
+            // initial page load via reacted_cat_ids) is always reflected
             const pawCountEl = document.getElementById('catModalPawCount');
             if (pawCountEl) pawCountEl.textContent = wrap.dataset.count;
             const pawBtn = document.getElementById('catModalPaw');
-            if (pawBtn) pawBtn.classList.remove('reacted');
+            if (pawBtn) pawBtn.classList.toggle('reacted', wrap.dataset.reacted === 'true');
 
             const petBtn = document.getElementById('catModalPet');
             if (petBtn) {
@@ -306,6 +297,16 @@
                 .then((data) => {
                     document.getElementById('catModalPawCount').textContent = data.count;
                     pawBtn.classList.toggle('reacted', data.reacted);
+
+                    // Persist onto the sprite itself so reopening the SAME
+                    // cat's popup later (without a page refresh) reads the
+                    // fresh count/reacted state instead of the stale
+                    // page-load value
+                    if (activeWrap) {
+                        activeWrap.dataset.count = data.count;
+                        activeWrap.dataset.reacted = data.reacted;
+                    }
+
                     if (data.reacted) floatEmojiFrom(pawBtn, '🐾');
                 });
         });
@@ -315,18 +316,10 @@
     if (petBtn) {
         petBtn.addEventListener('click', () => {
             if (!activePetUrl || petBtn.disabled) return;
-            // Disable immediately, before the network request even starts -
-            // otherwise rapid clicks fire multiple requests before the
-            // first response comes back, and the button stays clickable
-            // until the page is refreshed
             petBtn.disabled = true;
             petBtn.classList.add('petted');
             petBtn.textContent = '💗 Petted';
 
-            // Also persist this onto the sprite itself - otherwise closing
-            // and reopening the SAME cat's popup (without a full page
-            // refresh) re-reads the original page-load value and resets
-            // the button back to clickable
             if (activeWrap) activeWrap.dataset.petted = 'true';
 
             fetch(activePetUrl, {
@@ -341,7 +334,6 @@
                     floatEmojiFrom(petBtn, '💗');
                 })
                 .catch(() => {
-                    // Request failed - re-enable so they can try again
                     petBtn.disabled = false;
                     petBtn.classList.remove('petted');
                     petBtn.textContent = '💗 Pet';

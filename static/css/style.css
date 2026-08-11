@@ -59,6 +59,8 @@ p {
 }
 
 /* ---------- Navbar ---------- */
+
+
 .navbar {
     background-color: #FFFFFF;
     border-bottom: 2px solid var(--soft-lavender);
@@ -94,6 +96,7 @@ p {
     color: var(--periwinkle-blue);
     background-color: var(--soft-lavender);
 }
+
 
 /* ---------- Buttons ---------- */
 .btn {

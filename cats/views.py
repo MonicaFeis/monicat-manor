@@ -44,8 +44,17 @@ class SceneView(TemplateView):
                 user=self.request.user, date=today
             ).values_list('cat_id', flat=True)
             context['petted_cat_ids'] = list(petted_ids)
+
+            # Needed so the paw button/count render correctly on reopen -
+            # without this, wrap.dataset.reacted is always "false" on
+            # initial page load even for cats the user already favorited
+            reacted_ids = Reaction.objects.filter(
+                user=self.request.user
+            ).values_list('cat_id', flat=True)
+            context['reacted_cat_ids'] = list(reacted_ids)
         else:
             context['petted_cat_ids'] = []
+            context['reacted_cat_ids'] = []
 
         return context
 

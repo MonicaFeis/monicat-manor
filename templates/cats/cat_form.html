@@ -63,7 +63,6 @@
         font-weight: 500;
     }
 
-    /* Safety net for very narrow phones (iPhone SE and similar, ~375px) */
     @media (max-width: 400px) {
         .card {
             padding: 1rem !important;
@@ -92,14 +91,17 @@
 
                 <div class="mb-4">
                     <label class="form-label d-block">Pick a coat color</label>
+                    <!-- data-value must exactly match models.COAT_COLOR_CHOICES,
+                         and colors are pulled from the site's own CSS variables
+                         so the palette here matches the rest of the brand -->
                     <div id="colorPalette" class="d-flex align-items-center flex-wrap">
-                        <span class="swatch active" style="background:#2A3B8F;" data-color="#2A3B8F" data-value="ink_brown"></span>
-                        <span class="swatch" style="background:#F5F3FE; box-shadow:0 0 0 1px var(--dusty-violet);" data-color="#F5F3FE" data-value="cream"></span>
-                        <span class="swatch" style="background:#E8798F;" data-color="#E8798F" data-value="terracotta"></span>
-                        <span class="swatch" style="background:#E8965A;" data-color="#E8965A" data-value="rust"></span>
-                        <span class="swatch" style="background:#6FCF97;" data-color="#6FCF97" data-value="sage"></span>
-                        <span class="swatch" style="background:#4E73F8;" data-color="#4E73F8" data-value="honey"></span>
-                        <span class="swatch" style="background:#B39DDB;" data-color="#B39DDB" data-value="dusty_rose"></span>
+                        <span class="swatch active" style="background:#2A3B8F;" data-color="#2A3B8F" data-value="deep_blue"></span>
+                        <span class="swatch" style="background:#4E73F8;" data-color="#4E73F8" data-value="periwinkle"></span>
+                        <span class="swatch" style="background:#A39BD6;" data-color="#A39BD6" data-value="dusty_violet"></span>
+                        <span class="swatch" style="background:#78C8AA;" data-color="#78C8AA" data-value="mint"></span>
+                        <span class="swatch" style="background:#E89BB2;" data-color="#E89BB2" data-value="rose"></span>
+                        <span class="swatch" style="background:#E0A458;" data-color="#E0A458" data-value="honey"></span>
+                        <span class="swatch" style="background:#4A342E;" data-color="#4A342E" data-value="ink_brown"></span>
                         <span class="swatch" style="background:#1A1A2E;" data-color="#1A1A2E" data-value="classic"></span>
                     </div>
                 </div>
@@ -145,7 +147,7 @@
                     </div>
 
                     <!-- Hidden field populated by JS just before submit -->
-                    <input type="hidden" name="coat_color" id="coatColorInput" value="ink_brown">
+                    <input type="hidden" name="coat_color" id="coatColorInput" value="deep_blue">
 
                     <div class="form-check mb-4">
                         {{ form.is_public }}
@@ -174,11 +176,9 @@
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     let currentColor = '#2A3B8F';
-    let currentCoatValue = 'ink_brown';
+    let currentCoatValue = 'deep_blue';
     let drawing = false;
 
-    // Undo history: snapshot the canvas before each new stroke so a
-    // single mistake can be stepped back without clearing everything
     const undoStack = [];
     const MAX_UNDO_STEPS = 20;
     const undoBtn = document.getElementById('undoStroke');
@@ -196,8 +196,6 @@
         if (undoStack.length === 0) undoBtn.disabled = true;
     });
 
-    // If editing an existing cat, load its current drawing onto the
-    // canvas first so submitting without redrawing doesn't wipe it out
     const existingImageUrl = canvas.dataset.existingImage;
     if (existingImageUrl) {
         const img = new Image();
@@ -270,13 +268,15 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 
-    // Submit directly via fetch with the blob attached to FormData.
-    // On success this redirects to the scene/detail page as normal.
-    // On a validation failure, Django re-renders this page with errors
-    // in the response body (not a redirect). We use DOMParser to safely
-    // read those errors out of the response text - DOMParser creates an
-    // inert document that never executes scripts, so it can't collide
-    // with this page's own script scope the way document.write did.
+    // Returns true if every pixel is fully transparent (nothing drawn)
+    function isCanvasBlank(targetCanvas) {
+        const blankCtx = targetCanvas.getContext('2d');
+        const pixelBuffer = new Uint32Array(
+            blankCtx.getImageData(0, 0, targetCanvas.width, targetCanvas.height).data.buffer
+        );
+        return !pixelBuffer.some((pixel) => pixel !== 0);
+    }
+
     const catForm = document.getElementById('catForm');
     const clientErrorBox = document.getElementById('clientErrorBox');
 
@@ -284,11 +284,22 @@
         e.preventDefault();
 
         const submitBtn = catForm.querySelector('button[type="submit"]');
-        if (submitBtn.disabled) return; // guard against double-submit
+        if (submitBtn.disabled) return;
         submitBtn.disabled = true;
         const originalBtnText = submitBtn.textContent;
         submitBtn.textContent = 'Saving...';
         clientErrorBox.style.display = 'none';
+
+        // Block submission before we even try to read the canvas into a
+        // blob - an empty drawing shouldn't reach the server at all
+        if (isCanvasBlank(canvas)) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            clientErrorBox.textContent = 'Please draw your cat before saving - the canvas is empty.';
+            clientErrorBox.style.display = 'block';
+            clientErrorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
 
         canvas.toBlob((blob) => {
             if (!blob) {
@@ -312,8 +323,6 @@
                         return;
                     }
 
-                    // Not redirected = validation failed. Read the actual
-                    // errors out of the response and show them.
                     const html = await response.text();
                     const parsed = new DOMParser().parseFromString(html, 'text/html');
                     const errorEls = parsed.querySelectorAll('.errorlist li, .alert-danger, .text-danger');
