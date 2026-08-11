@@ -239,17 +239,17 @@ button.badge:hover {
 
 .scene-bg.time-day {
     filter: brightness(0.92) saturate(0.75);
-    background-image: url('../images/scene-images/manor-scene-day.png');
+    background-image: url('../images/scene-images/manor-scene-day.jpg');
 }
 
 .scene-bg.time-dusk {
     filter: brightness(0.95) saturate(0.9);
-    background-image: url('../images/scene-images/manor-scene-dusk.png');
+    background-image: url('../images/scene-images/manor-scene-dusk.jpg');
 }
 
 .scene-bg.time-night {
     filter: brightness(1) saturate(0.85);
-    background-image: url('../images/scene-images/manor-scene-night.png');
+    background-image: url('../images/scene-images/manor-scene-night.jpg');
 }
 
 .scene-bg::after {
