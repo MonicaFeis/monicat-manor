@@ -6,72 +6,13 @@
 {% block main_class %}p-0{% endblock %}
 
 {% block extra_css %}
-<style>
-    .navbar {
-        margin-bottom: 0 !important;
-    }
-
-    .scene-bg.time-day {
-        background-image: url('{% static "images/manor-scene-day.png" %}');
-    }
-    .scene-bg.time-dusk {
-        background-image: url('{% static "images/manor-scene-dusk.png" %}');
-    }
-    .scene-bg.time-night {
-        background-image: url('{% static "images/manor-scene-night.png" %}');
-    }
-
-    .float-pop {
-        position: fixed;
-        pointer-events: none;
-        font-size: 1.4rem;
-        z-index: 3000;
-        animation: floatUp 0.9s ease-out forwards;
-    }
-    @keyframes floatUp {
-        0% { transform: translateY(0) scale(0.8); opacity: 1; }
-        70% { opacity: 1; }
-        100% { transform: translateY(-40px) scale(1.3); opacity: 0; }
-    }
-
-    #catModal .modal-footer {
-        display: flex;
-        flex-wrap: nowrap;
-        justify-content: center;
-        gap: 8px;
-        padding: 14px 10px;
-    }
-    #catModal .modal-footer .btn {
-        font-size: 0.82rem;
-        padding: 0.4rem 0.75rem;
-        white-space: nowrap;
-        flex: 1 1 0;
-        text-align: center;
-    }
-    @media (max-width: 400px) {
-        #catModal .modal-footer .btn {
-            font-size: 0.72rem;
-            padding: 0.35rem 0.4rem;
-        }
-    }
-    #catModal .modal-body {
-        padding-bottom: 8px;
-    }
-    #catModalOwnerActions {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-top: 16px !important;
-        padding-top: 12px;
-        border-top: 1px solid var(--soft-lavender);
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
 {% endblock %}
 
 {% block content %}
     {% if cat_of_the_day %}
         <div class="spotlight-banner">
-            🌟 Cat of the Day: <strong>{{ cat_of_the_day.name }}</strong> — the most petted cat in the manor today!
+            🌟 Cat of the Day: <strong>{{ cat_of_the_day.name }}</strong> The most petted cat in the manor today!
         </div>
     {% endif %}
 
@@ -141,10 +82,7 @@
                 <span class="icon-btn-icon">🐱</span>
                 <span>Join the Manor</span>
             </a>
-            <a href="{% url 'gallery' %}" class="icon-btn secondary">
-                <span class="icon-btn-icon">🖼️</span>
-                <span>Gallery</span>
-            </a>
+        
         {% endif %}
     </div>
 
@@ -188,158 +126,7 @@
 
 {% block extra_js %}
 <script>
-    (function setSceneBackground() {
-        const hour = new Date().getHours();
-        const sceneBg = document.getElementById('sceneBg');
-        if (!sceneBg) return;
-
-        sceneBg.classList.remove('time-day', 'time-dusk', 'time-night');
-
-        if (hour >= 6 && hour < 17) {
-            sceneBg.classList.add('time-day');
-        } else if (hour >= 17 && hour < 20) {
-            sceneBg.classList.add('time-dusk');
-        } else {
-            sceneBg.classList.add('time-night');
-        }
-    })();
-
-    const catModalEl = document.getElementById('catModal');
-    const catModal = new bootstrap.Modal(catModalEl);
-
-    catModalEl.addEventListener('hide.bs.modal', () => {
-        if (document.activeElement && catModalEl.contains(document.activeElement)) {
-            document.activeElement.blur();
-        }
-    });
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const currentUsername = '{{ user.username|escapejs }}';
-    let activeReactUrl = null;
-    let activePetUrl = null;
-    let activeWrap = null;
-
-    const nameEmojis = ['🐱', '🐈', '😺', '😸'];
-    const moodEmojis = ['😊', '😽', '🥰', '😌', '😻'];
-
-    function pickEmoji(list, seed) {
-        const index = seed.length % list.length;
-        return list[index];
-    }
-
-    function floatEmojiFrom(button, emoji) {
-        const rect = button.getBoundingClientRect();
-        const pop = document.createElement('span');
-        pop.className = 'float-pop';
-        pop.textContent = emoji;
-        pop.style.left = (rect.left + rect.width / 2 - 10) + 'px';
-        pop.style.top = rect.top + 'px';
-        document.body.appendChild(pop);
-        setTimeout(() => pop.remove(), 900);
-    }
-
-    document.querySelectorAll('.cat-sprite-wrap').forEach((wrap) => {
-        wrap.addEventListener('click', () => {
-            const name = wrap.dataset.name;
-            const personality = wrap.dataset.personality;
-
-            document.getElementById('catModalName').textContent =
-                name + ' ' + pickEmoji(nameEmojis, name);
-            document.getElementById('catModalPersonality').textContent =
-                pickEmoji(moodEmojis, personality) + ' ' + personality;
-            document.getElementById('catModalOwner').textContent = 'Created by ' + wrap.dataset.owner;
-            document.getElementById('catModalLink').href = wrap.dataset.url;
-
-            const ownerActions = document.getElementById('catModalOwnerActions');
-            if (currentUsername && wrap.dataset.owner === currentUsername) {
-                document.getElementById('catModalEditLink').href = wrap.dataset.editUrl;
-                document.getElementById('catModalDeleteLink').href = wrap.dataset.deleteUrl;
-                ownerActions.style.display = 'block';
-            } else {
-                ownerActions.style.display = 'none';
-            }
-
-            activeReactUrl = wrap.dataset.reactUrl;
-            activePetUrl = wrap.dataset.petUrl;
-            activeWrap = wrap;
-
-            // Read straight from the sprite's own dataset each time the
-            // popup opens, so state set on a previous open (or from the
-            // initial page load via reacted_cat_ids) is always reflected
-            const pawCountEl = document.getElementById('catModalPawCount');
-            if (pawCountEl) pawCountEl.textContent = wrap.dataset.count;
-            const pawBtn = document.getElementById('catModalPaw');
-            if (pawBtn) pawBtn.classList.toggle('reacted', wrap.dataset.reacted === 'true');
-
-            const petBtn = document.getElementById('catModalPet');
-            if (petBtn) {
-                const alreadyPetted = wrap.dataset.petted === 'true';
-                petBtn.disabled = alreadyPetted;
-                petBtn.classList.toggle('petted', alreadyPetted);
-                petBtn.textContent = alreadyPetted ? '💗 Petted' : '💗 Pet';
-            }
-
-            catModal.show();
-        });
-    });
-
-    const pawBtn = document.getElementById('catModalPaw');
-    if (pawBtn) {
-        pawBtn.addEventListener('click', () => {
-            if (!activeReactUrl) return;
-            fetch(activeReactUrl, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    document.getElementById('catModalPawCount').textContent = data.count;
-                    pawBtn.classList.toggle('reacted', data.reacted);
-
-                    // Persist onto the sprite itself so reopening the SAME
-                    // cat's popup later (without a page refresh) reads the
-                    // fresh count/reacted state instead of the stale
-                    // page-load value
-                    if (activeWrap) {
-                        activeWrap.dataset.count = data.count;
-                        activeWrap.dataset.reacted = data.reacted;
-                    }
-
-                    if (data.reacted) floatEmojiFrom(pawBtn, '🐾');
-                });
-        });
-    }
-
-    const petBtn = document.getElementById('catModalPet');
-    if (petBtn) {
-        petBtn.addEventListener('click', () => {
-            if (!activePetUrl || petBtn.disabled) return;
-            petBtn.disabled = true;
-            petBtn.classList.add('petted');
-            petBtn.textContent = '💗 Petted';
-
-            if (activeWrap) activeWrap.dataset.petted = 'true';
-
-            fetch(activePetUrl, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-            })
-                .then((res) => res.json())
-                .then(() => {
-                    floatEmojiFrom(petBtn, '💗');
-                })
-                .catch(() => {
-                    petBtn.disabled = false;
-                    petBtn.classList.remove('petted');
-                    petBtn.textContent = '💗 Pet';
-                    if (activeWrap) activeWrap.dataset.petted = 'false';
-                });
-        });
-    }
+    window.MANOR_CURRENT_USERNAME = '{{ user.username|escapejs }}';
 </script>
+<script src="{% static 'js/scene.js' %}"></script>
 {% endblock %}
