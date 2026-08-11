@@ -86,14 +86,12 @@
 {% block content %}
     <div class="row justify-content-center py-4">
         <div class="col-12 col-md-8 col-lg-7">
-            <div class="card p-4 p-md-5">
+            <!-- Added data-is-editing attribute here so JavaScript can read it cleanly -->
+            <div class="card p-4 p-md-5" id="catCard" data-is-editing="{% if object %}true{% else %}false{% endif %}">
                 <h1 class="mb-4">{% if object %}Edit {{ object.name }}{% else %}Create your cat{% endif %}</h1>
 
                 <div class="mb-4">
                     <label class="form-label d-block">Pick a coat color</label>
-                    <!-- data-value must exactly match models.COAT_COLOR_CHOICES,
-                         and colors are pulled from the site's own CSS variables
-                         so the palette here matches the rest of the brand -->
                     <div id="colorPalette" class="d-flex align-items-center flex-wrap">
                         <span class="swatch active" style="background:#2A3B8F;" data-color="#2A3B8F" data-value="deep_blue"></span>
                         <span class="swatch" style="background:#4E73F8;" data-color="#4E73F8" data-value="periwinkle"></span>
@@ -146,7 +144,6 @@
                         {% if form.personality.errors %}<div class="text-danger small mt-1">{{ form.personality.errors|striptags }}</div>{% endif %}
                     </div>
 
-                    <!-- Hidden field populated by JS just before submit -->
                     <input type="hidden" name="coat_color" id="coatColorInput" value="deep_blue">
 
                     <div class="form-check mb-4">
@@ -268,6 +265,18 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 
+    // --- Safe pre-fill placeholders using the element's data attribute ---
+    const catCard = document.getElementById('catCard');
+    const isEditing = catCard && catCard.dataset.isEditing === 'true';
+
+    if (!isEditing) {
+        const nameInput = document.getElementById('id_name');
+        const personalityInput = document.getElementById('id_personality');
+
+        if (nameInput) nameInput.placeholder = "e.g., Sir Paws-a-Lot";
+        if (personalityInput) personalityInput.placeholder = "e.g., Curious explorer who loves chasing laser pointers and napping in sunbeams.";
+    }
+
     // Returns true if every pixel is fully transparent (nothing drawn)
     function isCanvasBlank(targetCanvas) {
         const blankCtx = targetCanvas.getContext('2d');
@@ -290,8 +299,6 @@
         submitBtn.textContent = 'Saving...';
         clientErrorBox.style.display = 'none';
 
-        // Block submission before we even try to read the canvas into a
-        // blob - an empty drawing shouldn't reach the server at all
         if (isCanvasBlank(canvas)) {
             submitBtn.disabled = false;
             submitBtn.textContent = originalBtnText;
