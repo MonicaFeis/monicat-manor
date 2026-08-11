@@ -23,7 +23,7 @@
             <a class="navbar-brand" href="{% url 'scene' %}">
                 <img src="{% static 'images/logo.jpeg' %}" alt="MoniCat Manor" style="height: 40px; width: auto;">
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navMenu">
@@ -47,7 +47,7 @@
                         <li class="nav-item ms-lg-2">
                             <form method="post" action="{% url 'logout' %}" class="d-inline">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-primary btn-sm px-3 py-1">Log out</button>
+                                <button type="submit" class="btn btn-primary btn-sm px-3 py-1" aria-label="Log out of your account">Log out</button>
                             </form>
                         </li>
                     {% else %}
