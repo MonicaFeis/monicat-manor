@@ -104,7 +104,7 @@
         const nameInput = document.getElementById('id_name');
         const personalityInput = document.getElementById('id_personality');
 
-        if (nameInput) nameInput.placeholder = "e.g., Whiskers, Luna, or Kitty";
+        if (nameInput) nameInput.placeholder = "e.g., Whiskers, Luna";
         if (personalityInput) personalityInput.placeholder = "e.g., Curious explorer who loves chasing laser pointers and napping in sunbeams.";
     }
 
