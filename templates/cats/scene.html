@@ -11,6 +11,8 @@
 {% endblock %}
 
 {% block content %}
+    <h1 class="visually-hidden">MoniCat Manor — The Manor</h1>
+
     {% if cat_of_the_day %}
         <div class="spotlight-banner">
             🌟 Cat of the Day: <strong>{{ cat_of_the_day.name }}</strong> The most petted cat in the manor today!
@@ -92,7 +94,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="catModalName"></h5>
+                    <h5 class="modal-title" id="catModalName">Cat details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
