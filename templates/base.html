@@ -28,6 +28,10 @@
         <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
     </noscript>
 
+    <!-- Own stylesheet stays render-blocking on purpose: it's small,
+         same-origin (no extra DNS/TLS round trip), and defines critical
+         layout rules, so keeping it blocking avoids a flash of
+         unstyled content on top of the Bootstrap swap above -->
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
 
     {% block extra_css %}{% endblock %}
