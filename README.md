@@ -317,7 +317,7 @@ for the specific issues this testing surfaced and how each was resolved.
 | [W3C CSS Validator](https://jigsaw.w3.org/css-validator/) | `style.css` | ✅ No errors found |
 | [JSHint](https://jshint.com/) | `scene.js`, `cat_form.js` (ES version set to ESNext) | ✅ No errors found — default ES5 warnings cleared by setting the correct ES version; one real `undefined variable: bootstrap` warning resolved with a `/* global bootstrap */` annotation |
 | Python `manage.py test` | Model and view unit tests (`cats/tests.py`) | ✅ 41/41 passing |
-| Lighthouse | Performance / accessibility / best practices | — |
+| Lighthouse | Homepage, login, signup, gallery, my-cats, create-cat (Desktop) | ✅ Performance 97–100, Accessibility 90–95, Best Practices 100, SEO 91 across all pages tested — see bug 35 for the one real fix this surfaced |
 
 ### How the test suite (`cats/tests.py`) works
 
@@ -369,7 +369,7 @@ being faked.
 - [x] Toggle public/private with one click
 - [x] Favorite toggles correctly and persists across popup reopen
 - [x] Pet works once per day, persists correctly across popup reopen
-- [x] Cat of the Day updates correctly and resets daily
+- [x] Cat of the Day updates correctly, resets daily, and shows no spotlight on a genuine tie
 - [x] Comment CRUD, with ownership-only edit/delete
 - [x] Only the cat's owner sees edit/delete controls in the popup
 - [x] 404 and 500 pages render correctly in production
@@ -417,6 +417,8 @@ rather than a suspiciously clean project history.
 | 31 | W3C HTML Validator: "This document has heading elements but none of them has a computed heading level of 1" | The scene page had no `<h1>` at all | Added a visually-hidden `<h1>` at the top of the content block using Bootstrap's `visually-hidden` utility class, so it's available to screen readers/SEO without changing the visual design |
 | 32 | W3C HTML Validator: "The heading `h5`... follows the heading `h1`..., skipping 3 heading levels" | Adding the `<h1>` (bug 31) meant the modal's `<h5>` title now jumped straight from level 1 to level 5 in the page's heading outline | Changed the modal title from `<h5>` to `<p>`, since Bootstrap's `modal-title` is a CSS class, not a required heading tag — removing it from the heading outline entirely rather than trying to patch the levels |
 | 33 | W3C HTML Validator: "The `aria-labelledby` attribute must not be specified on any `div` element unless the element has a `role` value other than..." | Adding `aria-labelledby="catModalName"` to the modal `<div>` (to properly associate its accessible name after bug 32) isn't valid on a `div`, which has an implicit ARIA role of `generic` | Added `role="dialog"` to the modal `<div>`, which is what Bootstrap's own accessibility docs recommend for modals anyway, making `aria-labelledby` valid and giving assistive tech proper context that the element is a dialog |
+| 34 | Petting every cat once with a single account crowned a random cat as "Cat of the Day," and that winner changed on every page refresh | `cat_of_the_day` was chosen with `order_by('-today_pet_count', '?')` — a random tie-break re-rolled on every request, so a genuine tie never produced a stable (or meaningful) winner | Replaced with a `get_cat_of_the_day()` helper that only crowns a cat when it has *strictly* more pets than the runner-up; ties now correctly show no spotlight banner instead of a flickering random pick |
+| 35 | Chrome DevTools Lighthouse (Accessibility, `/cat/new/`): "No label associated with a form field" on the Name and Personality inputs | The `<label>` elements had no `for` attribute pointing at the corresponding input's `id`, so screen readers couldn't announce which label describes which field | Added `for="{{ form.name.id_for_label }}"` / `for="{{ form.personality.id_for_label }}"` to properly associate each label with its Django-generated input `id` |
 
 ---
 
@@ -455,4 +457,5 @@ documented in [SETUP.md](SETUP.md).
   MDN Web Docs is credited inline via comments above the relevant code.
 - Background illustrations and logo: original artwork created for this
   project.
-- Design and development: Monica Feis.
+- Design and development: Monica Feis (cherryMa), with iterative build
+  assistance and debugging support from Claude (Anthropic).
