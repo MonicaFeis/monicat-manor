@@ -457,5 +457,4 @@ documented in [SETUP.md](SETUP.md).
   MDN Web Docs is credited inline via comments above the relevant code.
 - Background illustrations and logo: original artwork created for this
   project.
-- Design and development: Monica Feis (cherryMa), with iterative build
-  assistance and debugging support from Claude (Anthropic).
+- Design and development: Monica Feis 
