@@ -69,7 +69,7 @@ class SceneView(TemplateView):
 
             # Needed so the paw button/count render correctly on reopen -
             # without this, wrap.dataset.reacted is always "false" on
-            # initial page load even for cats the user already favorited
+            # initial page load even for cats the user already favourited
             reacted_ids = Reaction.objects.filter(
                 user=self.request.user
             ).values_list('cat_id', flat=True)
