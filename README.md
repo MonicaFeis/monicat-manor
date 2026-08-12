@@ -311,15 +311,52 @@ for the specific issues this testing surfaced and how each was resolved.
 
 ### Automated / validator testing
 
-*(To be completed — results to be filled in as each is run.)*
-
 | Tool | Target | Result |
 |---|---|---|
-| [W3C HTML Validator](https://validator.w3.org/) | All templates | — |
-| [W3C CSS Validator](https://jigsaw.w3.org/css-validator/) | `style.css` | — |
-| [JSHint](https://jshint.com/) / ESLint | Inline JS (canvas, scene, forms) | — |
-| Python `manage.py test` | Model and view unit tests | — |
+| [W3C HTML Validator (Nu Html Checker)](https://validator.w3.org/) | All templates, checked via live URLs and view-source for login-required pages | ✅ No errors found (see bugs 28–31 for accessibility warnings caught and fixed along the way) |
+| [W3C CSS Validator](https://jigsaw.w3.org/css-validator/) | `style.css` | ✅ No errors found |
+| [JSHint](https://jshint.com/) | `scene.js`, `cat_form.js` (ES version set to ESNext) | ✅ No errors found — default ES5 warnings cleared by setting the correct ES version; one real `undefined variable: bootstrap` warning resolved with a `/* global bootstrap */` annotation |
+| Python `manage.py test` | Model and view unit tests (`cats/tests.py`) | ✅ 41/41 passing |
 | Lighthouse | Performance / accessibility / best practices | — |
+
+### How the test suite (`cats/tests.py`) works
+
+41 automated tests, split into model tests and view tests, run with:
+```
+python3 manage.py test cats
+```
+
+**Model tests** cover each model's defaults, `__str__` output, ordering
+(`Cat` newest-first vs `Comment` oldest-first), and both `unique_together`
+constraints (`Reaction`, `DailyPet`) — confirming a duplicate reaction or a
+second same-day pet actually raises `IntegrityError` rather than silently
+allowing it.
+
+**View tests** cover, per view:
+- **Permissions** — every write action requires login; only a cat's owner
+  can update/delete it or toggle its visibility (non-owners get `403`, and
+  a non-owner hitting another user's toggle-visibility URL gets `404`
+  rather than silently succeeding)
+- **Context data** — `SceneView` only shows public cats, correctly
+  identifies `cat_of_the_day`, and (for logged-in users) populates
+  `reacted_cat_ids`/`petted_cat_ids` so the popup reflects real state on
+  first page load
+- **AJAX endpoints** — `toggle_reaction` and `pet_cat` are tested both as
+  AJAX calls (checking the returned JSON) and as plain POST requests
+  (checking the redirect), including that petting the same cat twice in
+  one day doesn't create a second `DailyPet` row
+- **Pagination ordering** — a regression test creates more cats than fit
+  on one page and asserts they appear in a deterministic newest-first
+  order (this test was added specifically to catch bug 28 below)
+
+**Storage handling:** the project's default file storage is Cloudinary
+(see `settings.STORAGES`). Every test that creates a `Cat` runs under
+`@override_settings`, pointing storage at a temporary local folder
+instead, so running the test suite never makes a real upload to
+Cloudinary or depends on production credentials being set locally.
+Uploaded images in tests are tiny real PNGs generated in memory with
+Pillow, so Django's `ImageField` validation genuinely passes rather than
+being faked.
 
 ### Manual test checklist (already verified)
 
@@ -374,6 +411,12 @@ rather than a suspiciously clean project history.
 | 25 | The site background/favicon returned 404 in production | An uploaded image kept its original extension (e.g. `.jpeg`) while the template referenced a different one (e.g. `.png`) | Renamed the file to match exactly what the template requested |
 | 26 | Browser console showed a Bootstrap `aria-hidden` accessibility warning on every modal close | Bootstrap applies `aria-hidden="true"` to the modal before moving focus away from whatever element (usually the close button) still had it | Explicitly blur the focused element on the modal's `hide.bs.modal` event, before Bootstrap applies `aria-hidden` |
 | 27 | Cats could be saved with a completely blank canvas | No validation existed, client or server side, requiring an actual drawing | Added client-side tracking of whether a real stroke has been made, with a clear on-page warning blocking submission until something is drawn |
+| 28 | `UnorderedObjectListWarning` on the homepage; cats could theoretically shift between pages or be skipped/duplicated across page loads | `SceneView`'s queryset uses `.annotate()`, which doesn't reliably preserve the `Cat` model's default `Meta.ordering`, leaving `Paginator` working against an effectively unordered queryset | Added an explicit `.order_by('-created_on')` after the `.annotate()` call; covered by a regression test that creates more cats than one page holds and asserts deterministic ordering |
+| 29 | `scene.html` would fail to render at all (`TemplateSyntaxError: Unclosed tag`) | A `{% if user.is_authenticated %}...{% else %}...{% endif %}` block in the modal footer was missing its `{% endif %}` | Added the missing `{% endif %}` |
+| 30 | W3C HTML Validator: "Empty heading" warning on `<h5 id="catModalName"></h5>` | The modal's title heading starts empty in the server-rendered HTML and is only filled in by JavaScript after a cat is clicked, which validators flag as empty content | Gave the element placeholder text ("Cat details"); later changed the element itself (see bug 32) |
+| 31 | W3C HTML Validator: "This document has heading elements but none of them has a computed heading level of 1" | The scene page had no `<h1>` at all | Added a visually-hidden `<h1>` at the top of the content block using Bootstrap's `visually-hidden` utility class, so it's available to screen readers/SEO without changing the visual design |
+| 32 | W3C HTML Validator: "The heading `h5`... follows the heading `h1`..., skipping 3 heading levels" | Adding the `<h1>` (bug 31) meant the modal's `<h5>` title now jumped straight from level 1 to level 5 in the page's heading outline | Changed the modal title from `<h5>` to `<p>`, since Bootstrap's `modal-title` is a CSS class, not a required heading tag — removing it from the heading outline entirely rather than trying to patch the levels |
+| 33 | W3C HTML Validator: "The `aria-labelledby` attribute must not be specified on any `div` element unless the element has a `role` value other than..." | Adding `aria-labelledby="catModalName"` to the modal `<div>` (to properly associate its accessible name after bug 32) isn't valid on a `div`, which has an implicit ARIA role of `generic` | Added `role="dialog"` to the modal `<div>`, which is what Bootstrap's own accessibility docs recommend for modals anyway, making `aria-labelledby` valid and giving assistive tech proper context that the element is a dialog |
 
 ---
 
@@ -412,5 +455,4 @@ documented in [SETUP.md](SETUP.md).
   MDN Web Docs is credited inline via comments above the relevant code.
 - Background illustrations and logo: original artwork created for this
   project.
-- Design and development: Monica Feis (cherryMa), with iterative build
-  assistance and debugging support from Claude (Anthropic).
+- Design and development: Monica Feis.
