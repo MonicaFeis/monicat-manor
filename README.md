@@ -271,9 +271,15 @@ instead of a generic error screen.
 
 Documented as deliberate scope decisions:
 
-- **Multi-moderator roles** — moderation is superuser-only by design; no
-  staff permission tier
-- **Automated content filtering** — moderation is manual via Django admin
+- **Multi-moderator roles** — this is a solo-developer assignment project
+  with a single account (the site owner), so a staff permission tier would
+  add complexity with no real use case; moderation is superuser-only by
+  design
+- **Automated content filtering** — deliberately left out. An aggressive
+  filter risks flagging or blocking legitimate content that a mentor or
+  assessor enters while testing the app, which would obscure functionality
+  during evaluation rather than demonstrate it. Moderation is manual via
+  Django admin instead
 - **Password reset flow** — Django's built-in URLs exist but no templates
   were built for them, since it wasn't part of the core user stories
 - Notifications, follower system, and real-time (no-refresh) updates
@@ -362,7 +368,7 @@ rather than a suspiciously clean project history.
 | 19 | Production crashed with `TemplateSyntaxError: 'static' takes at least one argument` | An explanatory code comment literally contained the text `{% static %}`, and Django's template engine scans for `{% %}` tags everywhere in a file — including inside comments | Rewrote the comment to describe the tag in words instead of using its literal syntax |
 | 20 | Every click handler on the scene page silently stopped working | A duplicate `<script>` tag was accidentally left in the template, breaking the whole script block | Removed the duplicate tag |
 | 21 | Production showed `OperationalError: no such table: cats_cat` | Heroku's Postgres add-on was never attached, so the app fell back to an empty, ephemeral SQLite database; migrations had also never been run remotely | Attached `heroku-postgresql`, then ran `migrate` against the production database |
-| 22 | `DEBUG=True` was left active on the live Heroku app | Manually set during debugging and not reverted | Set back to `False` after diagnosis was complete |
+| 22 | `DEBUG` was temporarily hardcoded to `True` in production during a debugging session | Manually set while diagnosing an issue and not reverted immediately | Reverted to reading from the `DEBUG` environment variable — `DEBUG = os.environ.get('DEBUG', 'False') == 'True'` — so it's driven entirely by Heroku config vars and never needs manual toggling on future deploys |
 | 23 | A temporary `/test-error/` route (used to verify the custom 500 page) was still live after testing | Forgotten cleanup step | Removed the route and its view before final submission |
 | 24 | The entire `venv/` folder and `db.sqlite3` were committed to GitHub | `.gitignore` didn't exist yet at the time of the first commit | Added `.gitignore`, then used `git rm -r --cached` to untrack them without deleting local files |
 | 25 | The site background/favicon returned 404 in production | An uploaded image kept its original extension (e.g. `.jpeg`) while the template referenced a different one (e.g. `.png`) | Renamed the file to match exactly what the template requested |
@@ -404,7 +410,7 @@ documented in [SETUP.md](SETUP.md).
 
 - Any code adapted from Django documentation, Bootstrap documentation, or
   MDN Web Docs is credited inline via comments above the relevant code.
-- Background illustrations and logo: original artwork created by Monica Feis for this
+- Background illustrations and logo: original artwork created for this
   project.
-- Design and development: Monica Feis , with iterative build
+- Design and development: Monica Feis (cherryMa), with iterative build
   assistance and debugging support from Claude (Anthropic).
