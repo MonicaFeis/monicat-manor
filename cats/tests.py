@@ -25,7 +25,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import Cat, Comment, Reaction, DailyPet
-from .views import CATS_PER_SCENE
+from .views import CATS_PER_SCENE, get_cat_of_the_day
 
 
 # ---------- Shared test setup ----------
@@ -187,6 +187,17 @@ class SceneViewTests(BaseCatTestCase):
 
         response = self.client.get(reverse('scene'))
         self.assertEqual(response.context['cat_of_the_day'], popular)
+
+    def test_tied_pet_counts_crown_nobody(self):
+        # Pet every cat exactly once with the same account - a tie for
+        # first place should mean no cat of the day, not a random pick
+        cat_a = self.make_cat(name='Cat A')
+        cat_b = self.make_cat(name='Cat B')
+        DailyPet.objects.create(cat=cat_a, user=self.owner, date=timezone.localdate())
+        DailyPet.objects.create(cat=cat_b, user=self.owner, date=timezone.localdate())
+
+        response = self.client.get(reverse('scene'))
+        self.assertIsNone(response.context['cat_of_the_day'])
 
     def test_scene_cats_are_ordered_newest_first_across_pages(self):
         # Create more cats than one page holds, with names encoding their

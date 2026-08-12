@@ -15,6 +15,25 @@ from .models import Cat, Comment, Reaction, DailyPet
 CATS_PER_SCENE = 8
 
 
+def get_cat_of_the_day(queryset):
+    """Returns the cat with strictly the most pets today, or None if
+    there's a tie for the top spot (or nobody's been petted at all).
+
+    Only fetches the top 2 rows regardless of how many cats exist, since
+    that's all that's needed to know whether there's a clear winner.
+    """
+    top_two = list(
+        queryset.filter(today_pet_count__gt=0).order_by('-today_pet_count')[:2]
+    )
+    if not top_two:
+        return None
+    if len(top_two) == 1:
+        return top_two[0]
+    if top_two[0].today_pet_count > top_two[1].today_pet_count:
+        return top_two[0]
+    return None
+
+
 # ---------- The shared scene (homepage) ----------
 
 class SceneView(TemplateView):
@@ -26,6 +45,11 @@ class SceneView(TemplateView):
         context = super().get_context_data(**kwargs)
         today = timezone.localdate()
 
+        # .annotate() doesn't reliably preserve the model's default
+        # Meta.ordering, which leaves Paginator working against an
+        # unordered queryset (Django warns about this) - cats could then
+        # shift between pages or be skipped/duplicated across page loads.
+        # Ordering explicitly here removes that ambiguity.
         all_cats = Cat.objects.filter(is_public=True).annotate(
             today_pet_count=Count('pets', filter=Q(pets__date=today))
         ).order_by('-created_on')
@@ -34,9 +58,7 @@ class SceneView(TemplateView):
         page_number = self.request.GET.get('page', 1)
         context['cats'] = paginator.get_page(page_number)
 
-        cat_of_the_day = all_cats.filter(today_pet_count__gt=0).order_by(
-            '-today_pet_count', '?'
-        ).first()
+        cat_of_the_day = get_cat_of_the_day(all_cats)
         context['cat_of_the_day'] = cat_of_the_day
 
         if self.request.user.is_authenticated:
@@ -73,10 +95,10 @@ class GalleryView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = timezone.localdate()
-        cat_of_the_day = Cat.objects.filter(is_public=True).annotate(
+        all_cats = Cat.objects.filter(is_public=True).annotate(
             today_pet_count=Count('pets', filter=Q(pets__date=today))
-        ).filter(today_pet_count__gt=0).order_by('-today_pet_count', '?').first()
-        context['cat_of_the_day'] = cat_of_the_day
+        )
+        context['cat_of_the_day'] = get_cat_of_the_day(all_cats)
         return context
 
 
