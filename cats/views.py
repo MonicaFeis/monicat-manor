@@ -28,7 +28,7 @@ class SceneView(TemplateView):
 
         all_cats = Cat.objects.filter(is_public=True).annotate(
             today_pet_count=Count('pets', filter=Q(pets__date=today))
-        )
+        ).order_by('-created_on')
 
         paginator = Paginator(all_cats, CATS_PER_SCENE)
         page_number = self.request.GET.get('page', 1)

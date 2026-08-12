@@ -1,4 +1,4 @@
-    const canvas = document.getElementById('catCanvas');
+const canvas = document.getElementById('catCanvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     ctx.lineWidth = 7;
     ctx.lineCap = 'round';
@@ -143,7 +143,7 @@
             if (!blob) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalBtnText;
-            clientErrorBox.textContent = 'Could not read your drawing! Please try again.';
+                clientErrorBox.textContent = 'Could not read your drawing! Please try again.';
                 clientErrorBox.style.display = 'block';
                 return;
             }
@@ -172,9 +172,9 @@
 
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalBtnText;
-                    clientErrorBox.textContent = messages.length
-                        ? messages.join(' · ')
-                        : 'Could not save your cat! Please check the form and try again.';
+                    clientErrorBox.textContent = messages.length ?
+                        messages.join(' · ') :
+                        'Could not save your cat! Please check the form and try again.';
                     clientErrorBox.style.display = 'block';
                     clientErrorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 })

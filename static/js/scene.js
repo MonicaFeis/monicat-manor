@@ -1,3 +1,4 @@
+/* global bootstrap */
 // static/js/scene.js
 (function setSceneBackground() {
     const hour = new Date().getHours();
@@ -58,8 +59,8 @@ document.querySelectorAll('.cat-sprite-wrap').forEach((wrap) => {
         document.getElementById('catModalPersonality').textContent =
             pickEmoji(moodEmojis, personality) + ' ' + personality;
         document.getElementById('catModalOwner').textContent = 'Created by ' + wrap.dataset.owner;
-        
-        // Added back support for the profile link if present in your HTML modal
+
+        // Support for the profile link if present in the HTML modal
         const modalLink = document.getElementById('catModalLink');
         if (modalLink) {
             modalLink.href = wrap.dataset.url;
