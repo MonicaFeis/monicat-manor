@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load cloudinary_extras %}
 
 {% block title %}MoniCat Manor{% endblock %}
 
@@ -40,7 +41,7 @@
                         {% if cat_of_the_day and cat.pk == cat_of_the_day.pk %}
                             <span class="crown-badge">👑</span>
                         {% endif %}
-                        <img src="{{ cat.drawing_image.url }}" alt="{{ cat.name }}" class="cat-sprite">
+                        <img src="{{ cat.drawing_image.url|cld_optimize }}" alt="{{ cat.name }}" class="cat-sprite">
                     </div>
                 {% endfor %}
             </div>
