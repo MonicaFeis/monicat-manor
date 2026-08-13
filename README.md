@@ -1,4 +1,4 @@
-# 🏰🐱 MoniCat Manor
+# 🏡🐱 MoniCat Manor
 
 > Draw a cat. Name it. Give it a personality. Watch it join a shared, illustrated
 > manor with everyone else's cats — where it can earn favorites, get petted, and
@@ -8,18 +8,21 @@ MoniCat Manor is a Django full-stack web application built for Code Institute's
 Milestone 3 project. Users create custom cat portraits on an in-browser canvas,
 give them a name and personality, and publish them into a shared illustrated
 scene ("the manor") that changes appearance with the time of day. Visitors can
-browse, comment, favorite, and pet cats — with the most-petted cat each day
+browse, comment, favorite, and pet cats with the most-petted cat each day
 earning a "Cat of the Day" spotlight.
 
 **Live site:** https://monicat-manor-8f86a39892eb.herokuapp.com/
 **Repository:** https://github.com/MonicaFeis/monicat-manor
+**Demo video:** [Add your video link here — e.g. YouTube (unlisted) or Loom]
 
 ---
 
 ## 📖 Table of Contents
 
+- [Demo Video](#demo-video)
 - [Project Goals](#project-goals)
 - [UX Design](#ux-design)
+- [Wireframes](#wireframes)
 - [Data Model](#data-model)
 - [User Stories](#user-stories)
 - [Features](#features)
@@ -29,6 +32,15 @@ earning a "Cat of the Day" spotlight.
 - [Bugs Found & Fixed](#bugs-found--fixed)
 - [Deployment](#deployment)
 - [Credits](#credits)
+
+---
+
+## Demo Video
+
+A short walkthrough covering account creation, drawing and publishing a
+cat, the petting/favoriting mechanics, and the Cat of the Day spotlight:
+
+**[Watch the demo video](#)** *(add your video link here)*
 
 ---
 
@@ -83,10 +95,22 @@ with any public cats already living in it, in the spirit of interactive
 day, dusk, and night illustrations based on the visitor's own local time,
 giving the space a sense of being alive rather than static.
 
-### Wireframes / planning artifacts
+---
 
-Data model planning, ERD, and ID structure were worked through before
-implementation — see [DATA_MODEL.md](DATA_MODEL.md) for the full breakdown.
+## Wireframes
+
+Low-fidelity wireframes were sketched before implementation to plan the
+core page layouts (the manor scene, gallery, and cat creation flow).
+The final build diverged in some visual details as the design evolved
+(see Design evolution above), but the underlying page structure and
+navigation stayed consistent with the original plan.
+
+![Low-fidelity wireframe](docs/wireframes/wireframe.png)
+*(Replace this path with wherever you save the wireframe image in your repo. e.g. `docs/wireframes/`)*
+
+Data model planning, ERD, and ID structure were also worked through
+before implementation check [DATA_MODEL.md](DATA_MODEL.md) for the full
+breakdown.
 
 ---
 
@@ -271,17 +295,26 @@ instead of a generic error screen.
 
 Documented as deliberate scope decisions:
 
-- **Multi-moderator roles** — this is a solo-developer assignment project
+- **Multi-moderator roles** this is a solo-developer assignment project
   with a single account (the site owner), so a staff permission tier would
   add complexity with no real use case; moderation is superuser-only by
   design
-- **Automated content filtering** — deliberately left out. An aggressive
+- **Automated content filtering** deliberately left out. An aggressive
   filter risks flagging or blocking legitimate content that a mentor or
   assessor enters while testing the app, which would obscure functionality
   during evaluation rather than demonstrate it. Moderation is manual via
   Django admin instead
-- **Password reset flow** — Django's built-in URLs exist but no templates
+- **Password reset flow** Django's built-in URLs exist but no templates
   were built for them, since it wasn't part of the core user stories
+- **Next-gen format conversion for the static background scene
+  illustrations** cat drawings (the majority of the site's imagery) are
+  automatically served in the optimal format and quality via Cloudinary's
+  `f_auto,q_auto` transformation, but the hand-drawn manor background
+  images are static files and weren't manually converted to WebP/AVIF.
+  Lighthouse still flags some remaining "Improve image delivery" savings
+  on the homepage as a result and left as a deliberate time trade-off
+  rather than a missed bug, since performance was otherwise already
+  substantially improved (see Testing)
 - Notifications, follower system, and real-time (no-refresh) updates
 
 ---
@@ -317,7 +350,7 @@ for the specific issues this testing surfaced and how each was resolved.
 | [W3C CSS Validator](https://jigsaw.w3.org/css-validator/) | `style.css` | ✅ No errors found |
 | [JSHint](https://jshint.com/) | `scene.js`, `cat_form.js` (ES version set to ESNext) | ✅ No errors found — default ES5 warnings cleared by setting the correct ES version; one real `undefined variable: bootstrap` warning resolved with a `/* global bootstrap */` annotation |
 | Python `manage.py test` | Model and view unit tests (`cats/tests.py`) | ✅ 41/41 passing |
-| Lighthouse | Homepage, login, signup, gallery, my-cats, create-cat (Desktop) | ✅ Performance 97–100, Accessibility 90–95, Best Practices 100, SEO 91 across all pages tested — see bug 35 for the one real fix this surfaced |
+| Lighthouse | Homepage, login, signup, gallery, my-cats, create-cat (Desktop + Mobile) | ✅ Desktop: Performance 97–100, Accessibility 90–95, Best Practices 100, SEO 91. Mobile (final, after optimization): Homepage 85, Gallery 98, My Cats 97, Create a Cat 97, Accessibility 92–95, Best Practices 100, SEO 91 — see bugs 35–37 |
 
 ### How the test suite (`cats/tests.py`) works
 
@@ -328,24 +361,24 @@ python3 manage.py test cats
 
 **Model tests** cover each model's defaults, `__str__` output, ordering
 (`Cat` newest-first vs `Comment` oldest-first), and both `unique_together`
-constraints (`Reaction`, `DailyPet`) — confirming a duplicate reaction or a
+constraints (`Reaction`, `DailyPet`) and confirming a duplicate reaction or a
 second same-day pet actually raises `IntegrityError` rather than silently
 allowing it.
 
 **View tests** cover, per view:
-- **Permissions** — every write action requires login; only a cat's owner
+- **Permissions** every write action requires login; only a cat's owner
   can update/delete it or toggle its visibility (non-owners get `403`, and
   a non-owner hitting another user's toggle-visibility URL gets `404`
   rather than silently succeeding)
-- **Context data** — `SceneView` only shows public cats, correctly
+- **Context data** `SceneView` only shows public cats, correctly
   identifies `cat_of_the_day`, and (for logged-in users) populates
   `reacted_cat_ids`/`petted_cat_ids` so the popup reflects real state on
   first page load
-- **AJAX endpoints** — `toggle_reaction` and `pet_cat` are tested both as
+- **AJAX endpoints** `toggle_reaction` and `pet_cat` are tested both as
   AJAX calls (checking the returned JSON) and as plain POST requests
   (checking the redirect), including that petting the same cat twice in
   one day doesn't create a second `DailyPet` row
-- **Pagination ordering** — a regression test creates more cats than fit
+- **Pagination ordering** a regression test creates more cats than fit
   on one page and asserts they appear in a deterministic newest-first
   order (this test was added specifically to catch bug 28 below)
 
@@ -402,10 +435,10 @@ rather than a suspiciously clean project history.
 | 16 | "Small" buttons (`.btn-sm`) rendered at full size | A global `.btn` rule set padding/font-size that, due to equal CSS specificity and load order, overrode Bootstrap's smaller `.btn-sm` variant | Added an explicit `.btn-sm` override |
 | 17 | The "Personality" label appeared near the bottom of its textarea instead of above it | Neither the label nor the textarea had `display: block`, so both sat on the same inline-level line box and were baseline-aligned | Added `display: block` to `.form-label` |
 | 18 | The drawing canvas stayed locked near 400px wide even on tablet/desktop | Only `max-width: 100%` was set (which caps size but doesn't grow it) | Added an explicit `width: 100%` so the canvas actually fills wider containers |
-| 19 | Production crashed with `TemplateSyntaxError: 'static' takes at least one argument` | An explanatory code comment literally contained the text `{% static %}`, and Django's template engine scans for `{% %}` tags everywhere in a file — including inside comments | Rewrote the comment to describe the tag in words instead of using its literal syntax |
+| 19 | Production crashed with `TemplateSyntaxError: 'static' takes at least one argument` | An explanatory code comment literally contained the text `{% static %}`, and Django's template engine scans for `{% %}` tags everywhere in a file including inside comments | Rewrote the comment to describe the tag in words instead of using its literal syntax |
 | 20 | Every click handler on the scene page silently stopped working | A duplicate `<script>` tag was accidentally left in the template, breaking the whole script block | Removed the duplicate tag |
 | 21 | Production showed `OperationalError: no such table: cats_cat` | Heroku's Postgres add-on was never attached, so the app fell back to an empty, ephemeral SQLite database; migrations had also never been run remotely | Attached `heroku-postgresql`, then ran `migrate` against the production database |
-| 22 | `DEBUG` was temporarily hardcoded to `True` in production during a debugging session | Manually set while diagnosing an issue and not reverted immediately | Reverted to reading from the `DEBUG` environment variable — `DEBUG = os.environ.get('DEBUG', 'False') == 'True'` — so it's driven entirely by Heroku config vars and never needs manual toggling on future deploys |
+| 22 | `DEBUG` was temporarily hardcoded to `True` in production during a debugging session | Manually set while diagnosing an issue and not reverted immediately | Reverted to reading from the `DEBUG` environment variable —`DEBUG = os.environ.get('DEBUG', 'False') == 'True'` so it's driven entirely by Heroku config vars and never needs manual toggling on future deploys |
 | 23 | A temporary `/test-error/` route (used to verify the custom 500 page) was still live after testing | Forgotten cleanup step | Removed the route and its view before final submission |
 | 24 | The entire `venv/` folder and `db.sqlite3` were committed to GitHub | `.gitignore` didn't exist yet at the time of the first commit | Added `.gitignore`, then used `git rm -r --cached` to untrack them without deleting local files |
 | 25 | The site background/favicon returned 404 in production | An uploaded image kept its original extension (e.g. `.jpeg`) while the template referenced a different one (e.g. `.png`) | Renamed the file to match exactly what the template requested |
@@ -417,15 +450,18 @@ rather than a suspiciously clean project history.
 | 31 | W3C HTML Validator: "This document has heading elements but none of them has a computed heading level of 1" | The scene page had no `<h1>` at all | Added a visually-hidden `<h1>` at the top of the content block using Bootstrap's `visually-hidden` utility class, so it's available to screen readers/SEO without changing the visual design |
 | 32 | W3C HTML Validator: "The heading `h5`... follows the heading `h1`..., skipping 3 heading levels" | Adding the `<h1>` (bug 31) meant the modal's `<h5>` title now jumped straight from level 1 to level 5 in the page's heading outline | Changed the modal title from `<h5>` to `<p>`, since Bootstrap's `modal-title` is a CSS class, not a required heading tag — removing it from the heading outline entirely rather than trying to patch the levels |
 | 33 | W3C HTML Validator: "The `aria-labelledby` attribute must not be specified on any `div` element unless the element has a `role` value other than..." | Adding `aria-labelledby="catModalName"` to the modal `<div>` (to properly associate its accessible name after bug 32) isn't valid on a `div`, which has an implicit ARIA role of `generic` | Added `role="dialog"` to the modal `<div>`, which is what Bootstrap's own accessibility docs recommend for modals anyway, making `aria-labelledby` valid and giving assistive tech proper context that the element is a dialog |
-| 34 | Petting every cat once with a single account crowned a random cat as "Cat of the Day," and that winner changed on every page refresh | `cat_of_the_day` was chosen with `order_by('-today_pet_count', '?')` — a random tie-break re-rolled on every request, so a genuine tie never produced a stable (or meaningful) winner | Replaced with a `get_cat_of_the_day()` helper that only crowns a cat when it has *strictly* more pets than the runner-up; ties now correctly show no spotlight banner instead of a flickering random pick |
+| 34 | Petting every cat once with a single account crowned a random cat as "Cat of the Day," and that winner changed on every page refresh | `cat_of_the_day` was chosen with `order_by('-today_pet_count', '?')`  a random tie-break re-rolled on every request, so a genuine tie never produced a stable (or meaningful) winner | Replaced with a `get_cat_of_the_day()` helper that only crowns a cat when it has *strictly* more pets than the runner-up; ties now correctly show no spotlight banner instead of a flickering random pick |
 | 35 | Chrome DevTools Lighthouse (Accessibility, `/cat/new/`): "No label associated with a form field" on the Name and Personality inputs | The `<label>` elements had no `for` attribute pointing at the corresponding input's `id`, so screen readers couldn't announce which label describes which field | Added `for="{{ form.name.id_for_label }}"` / `for="{{ form.personality.id_for_label }}"` to properly associate each label with its Django-generated input `id` |
+| 36 | Console warning on every page except the homepage: "resource was preloaded using link preload but not used within a few seconds" | `base.html` unconditionally preloaded the manor scene background image in every page's `<head>`, but that image is only actually used on the homepage, every other page (Gallery, My Cats, Create a Cat, login, signup) downloaded it early and never used it, wasting bandwidth on mobile especially | Removed the universal preload from `base.html`; `scene.html` already has its own scoped copy in its `extra_css` block for the one page that actually needs it |
+| 37 | Lighthouse mobile Performance scores of 74–87 across several pages, with "Render-blocking requests" (1,500–2,600ms estimated savings) and "Improve image delivery" flagged on every page | Bootstrap CSS and Google Fonts were loaded as standard blocking `<link rel="stylesheet">` tags from external CDNs, delaying first paint until both downloaded; cat drawing images were served at their original Cloudinary format/quality with no automatic optimization | Added `rel="preconnect"` hints plus the preload+swap pattern for both external stylesheets in `base.html` (render-blocking savings dropped to ~150ms on the homepage); added a `cld_optimize` template filter applying Cloudinary's `f_auto,q_auto` transformation to every cat image across `scene.html`, `gallery.html`, `my_cats.html`, `cat_detail.html`, and `cat_form.html`. Mobile Performance rose from 74→85 (homepage), 87→98 (gallery), 81→97 (my cats) |
+| 36 | Console warning on every page except the homepage: "resource was preloaded using link preload but not used within a few seconds" | `base.html` unconditionally preloaded the manor scene background image in every page's `<head>`, but that image is only actually used on the homepage — every other page (Gallery, My Cats, Create a Cat, login, signup) downloaded it early and never used it, wasting bandwidth on mobile especially | Removed the universal preload from `base.html`; `scene.html` already has its own scoped copy in its `extra_css` block for the one page that actually needs it |
 
 ---
 
 ## Deployment
 
 This project is deployed on Heroku, running on the **Heroku-24 stack**
-(deliberately not upgraded to Heroku-26 — the newer stack offers no
+(deliberately not upgraded to Heroku-26 the newer stack offers no
 functional benefit here, and upgrading close to submission would add
 unnecessary risk for no benefit; this refers to Heroku's underlying
 OS/runtime image, not the Django version, which runs identically on either).
@@ -453,8 +489,12 @@ documented in [SETUP.md](SETUP.md).
 
 ## Credits
 
+- Code Institute diploma attribution General knowledge sources (CI course material/walkthrough projects, Django/Bootstrap docs, MDN, W3Schools, Stack Overflow)
+Direct-adaptation note (unchanged)
+- TinyPNG for compressing all the image and app logo.
+- Wireframe CC for create minimalist low-fidelity wireframe.
 - Any code adapted from Django documentation, Bootstrap documentation, or
   MDN Web Docs is credited inline via comments above the relevant code.
 - Background illustrations and logo: original artwork created for this
   project.
-- Design and development: Monica Feis 
+- Images, logo design and development: Monica Feis.
