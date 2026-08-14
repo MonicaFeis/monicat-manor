@@ -69,7 +69,7 @@ class SceneView(TemplateView):
 
             # Needed so the paw button/count render correctly on reopen -
             # without this, wrap.dataset.reacted is always "false" on
-            # initial page load even for cats the user already favourited
+            # initial page load even for cats the user already favorited
             reacted_ids = Reaction.objects.filter(
                 user=self.request.user
             ).values_list('cat_id', flat=True)
@@ -135,7 +135,9 @@ class CatDetailView(DetailView):
 
 class CatCreateView(LoginRequiredMixin, CreateView):
     model = Cat
-    fields = ['name', 'personality', 'coat_color', 'drawing_image', 'is_public']
+    fields = [
+        'name', 'personality', 'coat_color', 'drawing_image', 'is_public'
+    ]
     template_name = 'cats/cat_form.html'
     success_url = reverse_lazy('scene')
 
@@ -146,7 +148,9 @@ class CatCreateView(LoginRequiredMixin, CreateView):
 
 class CatUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Cat
-    fields = ['name', 'personality', 'coat_color', 'drawing_image', 'is_public']
+    fields = [
+        'name', 'personality', 'coat_color', 'drawing_image', 'is_public'
+    ]
     template_name = 'cats/cat_form.html'
 
     def test_func(self):
@@ -213,7 +217,9 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 @login_required
 def toggle_reaction(request, pk):
     cat = get_object_or_404(Cat, pk=pk, is_public=True)
-    reaction, created = Reaction.objects.get_or_create(cat=cat, user=request.user)
+    reaction, created = Reaction.objects.get_or_create(
+        cat=cat, user=request.user
+    )
     reacted = True
     if not created:
         reaction.delete()
@@ -233,7 +239,9 @@ def toggle_reaction(request, pk):
 def pet_cat(request, pk):
     cat = get_object_or_404(Cat, pk=pk, is_public=True)
     today = timezone.localdate()
-    pet, created = DailyPet.objects.get_or_create(cat=cat, user=request.user, date=today)
+    pet, created = DailyPet.objects.get_or_create(
+        cat=cat, user=request.user, date=today
+    )
 
     today_count = cat.pets.filter(date=today).count()
 

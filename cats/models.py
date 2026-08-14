@@ -19,10 +19,14 @@ COAT_COLOR_CHOICES = [
 class Cat(models.Model):
     """A single cat portrait created by a user."""
 
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cats')
+    owner = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='cats'
+    )
     name = models.CharField(max_length=50)
     personality = models.TextField(max_length=300)
-    coat_color = models.CharField(max_length=20, choices=COAT_COLOR_CHOICES, default='deep_blue')
+    coat_color = models.CharField(
+        max_length=20, choices=COAT_COLOR_CHOICES, default='deep_blue'
+    )
     drawing_image = models.ImageField(upload_to='cats/')
     is_public = models.BooleanField(default=True)
     created_on = models.DateTimeField(auto_now_add=True)
@@ -38,8 +42,12 @@ class Cat(models.Model):
 class Comment(models.Model):
     """A comment left on a public cat."""
 
-    cat = models.ForeignKey(Cat, on_delete=models.CASCADE, related_name='comments')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    cat = models.ForeignKey(
+        Cat, on_delete=models.CASCADE, related_name='comments'
+    )
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='comments'
+    )
     body = models.TextField(max_length=500)
     created_on = models.DateTimeField(auto_now_add=True)
 
@@ -53,8 +61,12 @@ class Comment(models.Model):
 class Reaction(models.Model):
     """A lightweight 'paw'/like on a cat. One per user per cat, permanent."""
 
-    cat = models.ForeignKey(Cat, on_delete=models.CASCADE, related_name='reactions')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reactions')
+    cat = models.ForeignKey(
+        Cat, on_delete=models.CASCADE, related_name='reactions'
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='reactions'
+    )
     created_on = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -68,8 +80,12 @@ class DailyPet(models.Model):
     """A daily 'pet' on a cat - resets every day, powers the Cat of the Day
     spotlight and gives users a reason to return."""
 
-    cat = models.ForeignKey(Cat, on_delete=models.CASCADE, related_name='pets')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_pets')
+    cat = models.ForeignKey(
+        Cat, on_delete=models.CASCADE, related_name='pets'
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='daily_pets'
+    )
     date = models.DateField(default=timezone.localdate)
 
     class Meta:
