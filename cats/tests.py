@@ -25,7 +25,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import Cat, Comment, Reaction, DailyPet
-from .views import CATS_PER_SCENE, get_cat_of_the_day
+from .views import CATS_PER_SCENE
 
 
 # ---------- Shared test setup ----------
