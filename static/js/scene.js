@@ -142,6 +142,12 @@ if (petBtn) {
             .then((res) => res.json())
             .then(() => {
                 floatEmojiFrom(petBtn, '💗');
+                // The Cat of the Day crown/banner are computed server-side
+                // at page load and don't update via this AJAX call alone
+                // reload shortly after so a pet that changes today's
+                // leader is reflected immediately, not just on the
+                // visitor's next manual refresh
+                setTimeout(() => window.location.reload(), 900);
             })
             .catch(() => {
                 petBtn.disabled = false;
