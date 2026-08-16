@@ -2,15 +2,17 @@
 Test suite for the cats app.
 
 Covers:
-- Model behaviour: defaults, __str__, ordering, unique_together constraints
-- View behaviour: permissions (login-required, owner-only), context data,
-  AJAX vs non-AJAX responses, and the core interactive features
+- Model behaviour: defaults, __str__, ordering, unique_together
+  constraints
+- View behaviour: permissions (login-required, owner-only), context
+  data, AJAX vs non-AJAX responses, and the core interactive features
   (favorite/paw, daily pet, visibility toggle, comment CRUD)
 
 Storage note: the project's default file storage is Cloudinary
-(see settings.STORAGES). Tests override this to a local FileSystemStorage
-pointing at a temporary directory, so creating a Cat with an image never
-makes a real network call during `manage.py test`.
+(see settings.STORAGES). Tests override this to a local
+FileSystemStorage pointing at a temporary directory, so creating a
+Cat with an image never makes a real network call during
+`manage.py test`.
 """
 
 import io
@@ -53,9 +55,12 @@ def make_test_image(name='test-cat.png'):
 @override_settings(
     MEDIA_ROOT=TEST_MEDIA_ROOT,
     STORAGES={
-        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage'
+        },
         'staticfiles': {
-            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+            'BACKEND':
+                'django.contrib.staticfiles.storage.StaticFilesStorage',
         },
     },
 )
@@ -63,8 +68,12 @@ class BaseCatTestCase(TestCase):
     """Common fixtures shared by model and view tests."""
 
     def setUp(self):
-        self.owner = User.objects.create_user(username='owner', password='pass12345')
-        self.other_user = User.objects.create_user(username='rival', password='pass12345')
+        self.owner = User.objects.create_user(
+            username='owner', password='pass12345'
+        )
+        self.other_user = User.objects.create_user(
+            username='rival', password='pass12345'
+        )
 
     def make_cat(self, owner=None, **overrides):
         defaults = {
@@ -104,8 +113,12 @@ class CommentModelTests(BaseCatTestCase):
 
     def test_str_and_ordering(self):
         cat = self.make_cat()
-        first = Comment.objects.create(cat=cat, author=self.owner, body='First!')
-        second = Comment.objects.create(cat=cat, author=self.other_user, body='Second!')
+        first = Comment.objects.create(
+            cat=cat, author=self.owner, body='First!'
+        )
+        second = Comment.objects.create(
+            cat=cat, author=self.other_user, body='Second!'
+        )
 
         self.assertEqual(str(first), f'Comment by owner on {cat.name}')
         # Oldest first, unlike Cat which is newest-first
@@ -134,7 +147,9 @@ class DailyPetModelTests(BaseCatTestCase):
     def test_str(self):
         cat = self.make_cat()
         today = timezone.localdate()
-        pet = DailyPet.objects.create(cat=cat, user=self.other_user, date=today)
+        pet = DailyPet.objects.create(
+            cat=cat, user=self.other_user, date=today
+        )
         self.assertEqual(str(pet), f'rival petted {cat.name} on {today}')
 
     def test_one_pet_per_user_per_cat_per_day(self):
@@ -143,7 +158,9 @@ class DailyPetModelTests(BaseCatTestCase):
         DailyPet.objects.create(cat=cat, user=self.other_user, date=today)
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                DailyPet.objects.create(cat=cat, user=self.other_user, date=today)
+                DailyPet.objects.create(
+                    cat=cat, user=self.other_user, date=today
+                )
 
 
 # ==================== VIEW TESTS ====================
@@ -170,7 +187,9 @@ class SceneViewTests(BaseCatTestCase):
     def test_authenticated_user_sees_own_reactions_and_pets(self):
         cat = self.make_cat()
         Reaction.objects.create(cat=cat, user=self.owner)
-        DailyPet.objects.create(cat=cat, user=self.owner, date=timezone.localdate())
+        DailyPet.objects.create(
+            cat=cat, user=self.owner, date=timezone.localdate()
+        )
 
         self.client.login(username='owner', password='pass12345')
         response = self.client.get(reverse('scene'))
@@ -181,9 +200,15 @@ class SceneViewTests(BaseCatTestCase):
     def test_cat_of_the_day_is_the_most_petted(self):
         popular = self.make_cat(name='Popular')
         quiet = self.make_cat(name='Quiet')
-        DailyPet.objects.create(cat=popular, user=self.owner, date=timezone.localdate())
-        DailyPet.objects.create(cat=popular, user=self.other_user, date=timezone.localdate())
-        DailyPet.objects.create(cat=quiet, user=self.owner, date=timezone.localdate())
+        DailyPet.objects.create(
+            cat=popular, user=self.owner, date=timezone.localdate()
+        )
+        DailyPet.objects.create(
+            cat=popular, user=self.other_user, date=timezone.localdate()
+        )
+        DailyPet.objects.create(
+            cat=quiet, user=self.owner, date=timezone.localdate()
+        )
 
         response = self.client.get(reverse('scene'))
         self.assertEqual(response.context['cat_of_the_day'], popular)
@@ -193,24 +218,31 @@ class SceneViewTests(BaseCatTestCase):
         # first place should mean no cat of the day, not a random pick
         cat_a = self.make_cat(name='Cat A')
         cat_b = self.make_cat(name='Cat B')
-        DailyPet.objects.create(cat=cat_a, user=self.owner, date=timezone.localdate())
-        DailyPet.objects.create(cat=cat_b, user=self.owner, date=timezone.localdate())
+        DailyPet.objects.create(
+            cat=cat_a, user=self.owner, date=timezone.localdate()
+        )
+        DailyPet.objects.create(
+            cat=cat_b, user=self.owner, date=timezone.localdate()
+        )
 
         response = self.client.get(reverse('scene'))
         self.assertIsNone(response.context['cat_of_the_day'])
 
     def test_scene_cats_are_ordered_newest_first_across_pages(self):
-        # Create more cats than one page holds, with names encoding their
-        # creation order, so we can assert the exact sequence Paginator
-        # sees is deterministic (newest first) rather than DB-default
-        # (which becomes undefined once .annotate() is involved without
-        # an explicit .order_by()).
+        # Create more cats than one page holds, with names encoding
+        # their creation order, so we can assert the exact sequence
+        # Paginator sees is deterministic (newest first) rather than
+        # DB-default (which becomes undefined once .annotate() is
+        # involved without an explicit .order_by()).
         cats_in_creation_order = [
-            self.make_cat(name=f'Cat {i}') for i in range(CATS_PER_SCENE + 2)
+            self.make_cat(name=f'Cat {i}')
+            for i in range(CATS_PER_SCENE + 2)
         ]
 
         response = self.client.get(reverse('scene'))
-        page_one_names = [cat.name for cat in response.context['cats']]
+        page_one_names = [
+            cat.name for cat in response.context['cats']
+        ]
 
         expected_first_page = [
             cat.name for cat in reversed(cats_in_creation_order)
@@ -258,13 +290,16 @@ class CatDetailViewTests(BaseCatTestCase):
         cat = self.make_cat()
         Reaction.objects.create(cat=cat, user=self.owner)
 
-        self.client.login(username='owner', password='pass12345')
-        response = self.client.get(reverse('cat_detail', kwargs={'pk': cat.pk}))
+        response = self.client.get(
+            reverse('cat_detail', kwargs={'pk': cat.pk})
+        )
         self.assertTrue(response.context['user_has_reacted'])
 
     def test_anonymous_user_has_reacted_is_false(self):
         cat = self.make_cat()
-        response = self.client.get(reverse('cat_detail', kwargs={'pk': cat.pk}))
+        response = self.client.get(
+            reverse('cat_detail', kwargs={'pk': cat.pk})
+        )
         self.assertFalse(response.context['user_has_reacted'])
 
 
@@ -299,7 +334,9 @@ class CatCreateViewTests(BaseCatTestCase):
 
         # Validation failure re-renders the form instead of redirecting
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(Cat.objects.filter(name='Bad Color Cat').exists())
+        self.assertFalse(
+            Cat.objects.filter(name='Bad Color Cat').exists()
+        )
 
 
 class CatUpdateDeleteViewTests(BaseCatTestCase):
@@ -307,26 +344,34 @@ class CatUpdateDeleteViewTests(BaseCatTestCase):
     def test_owner_can_access_update_form(self):
         cat = self.make_cat()
         self.client.login(username='owner', password='pass12345')
-        response = self.client.get(reverse('cat_update', kwargs={'pk': cat.pk}))
+        response = self.client.get(
+            reverse('cat_update', kwargs={'pk': cat.pk})
+        )
         self.assertEqual(response.status_code, 200)
 
     def test_non_owner_forbidden_from_update(self):
         cat = self.make_cat(owner=self.owner)
         self.client.login(username='rival', password='pass12345')
-        response = self.client.get(reverse('cat_update', kwargs={'pk': cat.pk}))
+        response = self.client.get(
+            reverse('cat_update', kwargs={'pk': cat.pk})
+        )
         self.assertEqual(response.status_code, 403)
 
     def test_non_owner_forbidden_from_delete(self):
         cat = self.make_cat(owner=self.owner)
         self.client.login(username='rival', password='pass12345')
-        response = self.client.post(reverse('cat_delete', kwargs={'pk': cat.pk}))
+        response = self.client.post(
+            reverse('cat_delete', kwargs={'pk': cat.pk})
+        )
         self.assertEqual(response.status_code, 403)
         self.assertTrue(Cat.objects.filter(pk=cat.pk).exists())
 
     def test_owner_can_delete(self):
         cat = self.make_cat(owner=self.owner)
         self.client.login(username='owner', password='pass12345')
-        response = self.client.post(reverse('cat_delete', kwargs={'pk': cat.pk}))
+        response = self.client.post(
+            reverse('cat_delete', kwargs={'pk': cat.pk})
+        )
         self.assertRedirects(response, reverse('my_cats'))
         self.assertFalse(Cat.objects.filter(pk=cat.pk).exists())
 
@@ -336,16 +381,21 @@ class ToggleVisibilityTests(BaseCatTestCase):
     def test_owner_can_toggle(self):
         cat = self.make_cat(owner=self.owner, is_public=True)
         self.client.login(username='owner', password='pass12345')
-        self.client.post(reverse('cat_toggle_visibility', kwargs={'pk': cat.pk}))
+        self.client.post(
+            reverse('cat_toggle_visibility', kwargs={'pk': cat.pk})
+        )
         cat.refresh_from_db()
         self.assertFalse(cat.is_public)
 
     def test_non_owner_gets_404_not_error_page(self):
-        # toggle_visibility filters by owner=request.user in get_object_or_404,
-        # so a non-owner should get a 404, never silently succeed
+        # toggle_visibility filters by owner=request.user in
+        # get_object_or_404, so a non-owner should get a 404, never
+        # silently succeed
         cat = self.make_cat(owner=self.owner)
         self.client.login(username='rival', password='pass12345')
-        response = self.client.post(reverse('cat_toggle_visibility', kwargs={'pk': cat.pk}))
+        response = self.client.post(
+            reverse('cat_toggle_visibility', kwargs={'pk': cat.pk})
+        )
         self.assertEqual(response.status_code, 404)
 
 
@@ -353,41 +403,58 @@ class CommentTests(BaseCatTestCase):
 
     def test_add_comment_requires_login(self):
         cat = self.make_cat()
-        response = self.client.post(reverse('comment_create', kwargs={'pk': cat.pk}), {
-            'body': 'Cute cat!',
-        })
+        response = self.client.post(
+            reverse('comment_create', kwargs={'pk': cat.pk}),
+            {'body': 'Cute cat!'},
+        )
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Comment.objects.exists())
 
     def test_add_comment_creates_and_redirects(self):
         cat = self.make_cat()
         self.client.login(username='rival', password='pass12345')
-        response = self.client.post(reverse('comment_create', kwargs={'pk': cat.pk}), {
-            'body': 'Cute cat!',
-        })
-        self.assertRedirects(response, reverse('cat_detail', kwargs={'pk': cat.pk}))
-        self.assertTrue(Comment.objects.filter(cat=cat, body='Cute cat!').exists())
+        response = self.client.post(
+            reverse('comment_create', kwargs={'pk': cat.pk}),
+            {'body': 'Cute cat!'},
+        )
+        self.assertRedirects(
+            response, reverse('cat_detail', kwargs={'pk': cat.pk})
+        )
+        self.assertTrue(
+            Comment.objects.filter(cat=cat, body='Cute cat!').exists()
+        )
 
     def test_blank_comment_is_not_created(self):
         cat = self.make_cat()
         self.client.login(username='rival', password='pass12345')
-        self.client.post(reverse('comment_create', kwargs={'pk': cat.pk}), {'body': '   '})
+        self.client.post(
+            reverse('comment_create', kwargs={'pk': cat.pk}),
+            {'body': '   '},
+        )
         self.assertFalse(Comment.objects.exists())
 
     def test_only_author_can_edit_comment(self):
         cat = self.make_cat()
-        comment = Comment.objects.create(cat=cat, author=self.owner, body='Mine')
+        comment = Comment.objects.create(
+            cat=cat, author=self.owner, body='Mine'
+        )
 
         self.client.login(username='rival', password='pass12345')
-        response = self.client.get(reverse('comment_update', kwargs={'pk': comment.pk}))
+        response = self.client.get(
+            reverse('comment_update', kwargs={'pk': comment.pk})
+        )
         self.assertEqual(response.status_code, 403)
 
     def test_only_author_can_delete_comment(self):
         cat = self.make_cat()
-        comment = Comment.objects.create(cat=cat, author=self.owner, body='Mine')
+        comment = Comment.objects.create(
+            cat=cat, author=self.owner, body='Mine'
+        )
 
         self.client.login(username='rival', password='pass12345')
-        response = self.client.post(reverse('comment_delete', kwargs={'pk': comment.pk}))
+        response = self.client.post(
+            reverse('comment_delete', kwargs={'pk': comment.pk})
+        )
         self.assertEqual(response.status_code, 403)
         self.assertTrue(Comment.objects.filter(pk=comment.pk).exists())
 
@@ -396,7 +463,9 @@ class ToggleReactionTests(BaseCatTestCase):
 
     def test_requires_login(self):
         cat = self.make_cat()
-        response = self.client.post(reverse('cat_react', kwargs={'pk': cat.pk}))
+        response = self.client.post(
+            reverse('cat_react', kwargs={'pk': cat.pk})
+        )
         self.assertEqual(response.status_code, 302)
 
     def test_first_click_adds_reaction_ajax(self):
@@ -427,15 +496,21 @@ class ToggleReactionTests(BaseCatTestCase):
     def test_non_ajax_request_redirects_to_detail(self):
         cat = self.make_cat()
         self.client.login(username='rival', password='pass12345')
-        response = self.client.post(reverse('cat_react', kwargs={'pk': cat.pk}))
-        self.assertRedirects(response, reverse('cat_detail', kwargs={'pk': cat.pk}))
+        response = self.client.post(
+            reverse('cat_react', kwargs={'pk': cat.pk})
+        )
+        self.assertRedirects(
+            response, reverse('cat_detail', kwargs={'pk': cat.pk})
+        )
 
 
 class PetCatTests(BaseCatTestCase):
 
     def test_requires_login(self):
         cat = self.make_cat()
-        response = self.client.post(reverse('cat_pet', kwargs={'pk': cat.pk}))
+        response = self.client.post(
+            reverse('cat_pet', kwargs={'pk': cat.pk})
+        )
         self.assertEqual(response.status_code, 302)
 
     def test_first_pet_today_ajax(self):
@@ -464,7 +539,12 @@ class PetCatTests(BaseCatTestCase):
         data = response.json()
         self.assertTrue(data['already_petted'])
         # Still only one DailyPet row exists thanks to unique_together
-        self.assertEqual(DailyPet.objects.filter(cat=cat, user=self.other_user).count(), 1)
+        self.assertEqual(
+            DailyPet.objects.filter(
+                cat=cat, user=self.other_user
+            ).count(),
+            1,
+        )
 
 
 class SignUpViewTests(BaseCatTestCase):
@@ -480,4 +560,6 @@ class SignUpViewTests(BaseCatTestCase):
             'password2': 'a-very-secure-pw-93',
         })
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(User.objects.filter(username='newcatlover').exists())
+        self.assertTrue(
+            User.objects.filter(username='newcatlover').exists()
+        )

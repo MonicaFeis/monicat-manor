@@ -72,7 +72,7 @@ CLOUDINARY_API_SECRET=your-cloudinary-api-secret
 | `CLOUDINARY_API_SECRET` | **Required** | From your Cloudinary dashboard. Treat this like a password — never commit it. |
 | `DATABASE_URL` | Optional | Only needed if you want to connect to a real PostgreSQL database instead of the local SQLite fallback. |
 
-`.env` is already listed in `.gitignore` — never commit it.
+`.env` is already listed in `.gitignore`  never commit it.
 
 ## 5. Run migrations
 
@@ -115,10 +115,10 @@ to your real Cloudinary account.
 ## Troubleshooting
 
 **`OperationalError: no such table`**
-Migrations haven't been applied yet — run `python3 manage.py migrate`.
+Migrations haven't been applied yet. Run `python3 manage.py migrate`.
 
 **Images fail to upload / `drawing_image` errors on save**
-Double-check your three `CLOUDINARY_*` variables in `.env` — a typo or
+Double-check your three `CLOUDINARY_*` variables in `.env` a typo or
 missing value is the most common cause.
 
 **`ModuleNotFoundError` for a package that should be installed**
@@ -127,7 +127,7 @@ your prompt) and re-run `pip install -r requirements.txt`.
 
 **Styles look broken / missing**
 Run `python3 manage.py collectstatic` if you're testing with `DEBUG=False`
-locally — with `DEBUG=True`, Django serves static files automatically and
+locally with `DEBUG=True`, Django serves static files automatically and
 this step isn't needed.
 
 ---

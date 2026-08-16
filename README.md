@@ -106,7 +106,7 @@ The final build diverged in some visual details as the design evolved
 navigation stayed consistent with the original plan.
 
 ![Low-fidelity wireframe](docs/wireframes/wireframe.png)
-*(TODO: save your wireframe image to `docs/wireframes/wireframe.png` —
+*(TODO: save your wireframe image to `docs/wireframes/wireframe.png` 
 this line renders as a broken image until then)*
 
 Data model planning, ERD, and ID structure were also worked through
