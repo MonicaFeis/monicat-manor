@@ -13,8 +13,6 @@ earning a "Cat of the Day" spotlight.
 
 **Live site:** https://monicat-manor-8f86a39892eb.herokuapp.com/
 **Repository:** https://github.com/MonicaFeis/monicat-manor
-**Demo video:** 
-[https://github.com/user-attachments/assets/eb7dfd30-3fa1-4687-9325-e1b42d4e5918]
 
 ---
 
@@ -40,8 +38,7 @@ earning a "Cat of the Day" spotlight.
 
 A short walkthrough covering account creation, drawing and publishing a
 cat, the petting/favoriting mechanics, and the Cat of the Day spotlight:
-
-**[Watch the demo video](#)** *(add your video link here)*
+**[https://github.com/user-attachments/assets/eb7dfd30-3fa1-4687-9325-e1b42d4e5918](#)** 
 
 ---
 
