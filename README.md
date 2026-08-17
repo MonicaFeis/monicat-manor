@@ -38,7 +38,7 @@ earning a "Cat of the Day" spotlight.
 
 A short walkthrough covering account creation, drawing and publishing a
 cat, the petting/favoriting mechanics, and the Cat of the Day spotlight:
-**[https://github.com/user-attachments/assets/eb7dfd30-3fa1-4687-9325-e1b42d4e5918](#)** 
+**[https://github.com/user-attachments/assets/eb7dfd30-3fa1-4687-9325-e1b42d4e5918]** 
 
 ---
 
