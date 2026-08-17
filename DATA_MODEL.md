@@ -149,7 +149,7 @@ The resetting daily interaction that powers Cat of the Day.
 |---|---|---|
 | `cat` | `ForeignKey(Cat, on_delete=CASCADE, related_name='pets')` | |
 | `user` | `ForeignKey(User, on_delete=CASCADE, related_name='daily_pets')` | |
-| `date` | `DateField(default=timezone.localdate)` | Deliberately a `DateField`, not `DateTimeField` — the day is what matters for uniqueness, not the exact time. Using `timezone.localdate` as the default (evaluated per-row at creation) rather than a fixed default keeps every pet correctly attributed to the day it actually happened. |
+| `date` | `DateField(default=timezone.localdate)` | Deliberately a `DateField`, not `DateTimeField` the day is what matters for uniqueness, not the exact time. Using `timezone.localdate` as the default (evaluated per-row at creation) rather than a fixed default keeps every pet correctly attributed to the day it actually happened. |
 
 **Meta:** `unique_together = ('cat', 'user', 'date')` Guarantees at
 most one pet per user, per cat, per calendar day. This is what makes
