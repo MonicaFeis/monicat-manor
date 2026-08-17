@@ -118,7 +118,7 @@ Django's implicit default ordering, so the view also sets an explicit
 **Meta:** `ordering = ['created_on']` **oldest first**, deliberately
 the opposite of `Cat`'s ordering. A comment thread reads naturally in
 chronological order (like a conversation), whereas a gallery of cats
-reads naturally newest-first (like a feed).
+reads naturally newest first (like a feed).
 
 ---
 
@@ -136,7 +136,7 @@ The permanent "paw" favorite.
 guarantees a user can never favorite the same cat twice. The
 `toggle_reaction` view relies on this: it uses `get_or_create()` and,
 if the row already existed, deletes it. A clean toggle with no risk of
-duplicate rows even under rapid double-clicks, since the constraint
+duplicate rows even under rapid double clicks, since the constraint
 would reject a second insert outright.
 
 ---
@@ -149,14 +149,14 @@ The resetting daily interaction that powers Cat of the Day.
 |---|---|---|
 | `cat` | `ForeignKey(Cat, on_delete=CASCADE, related_name='pets')` | |
 | `user` | `ForeignKey(User, on_delete=CASCADE, related_name='daily_pets')` | |
-| `date` | `DateField(default=timezone.localdate)` | Deliberately a `DateField`, not `DateTimeField` — the day is what matters for uniqueness, not the exact time. Using `timezone.localdate` as the default (evaluated per-row at creation) rather than a fixed default keeps every pet correctly attributed to the day it actually happened. |
+| `date` | `DateField(default=timezone.localdate)` | Deliberately a `DateField`, not `DateTimeField` the day is what matters for uniqueness, not the exact time. Using `timezone.localdate` as the default (evaluated per row at creation) rather than a fixed default keeps every pet correctly attributed to the day it actually happened. |
 
 **Meta:** `unique_together = ('cat', 'user', 'date')` Guarantees at
 most one pet per user, per cat, per calendar day. This is what makes
-"already petted today" detection trivial and race-condition-proof: the
+"already petted today" detection trivial and race condition proof: the
 `pet_cat` view attempts `get_or_create()`, and the database itself
-rejects a second same-day row rather than the application needing to
-check-then-insert (which would have a race condition window between
+rejects a second same day row rather than the application needing to
+check then insert (which would have a race condition window between
 the check and the insert under concurrent requests).
 
 **Why a separate model instead of a field on `Cat`:** Cat of the Day
@@ -169,13 +169,13 @@ still preserving a full history if it's ever needed later.
 
 ---
 
-## Cross-cutting design decisions
+## Cross cutting design decisions
 
 **Why `Cat.objects.filter(is_public=True)` appears in almost every
 public-facing view, rather than a model-level default manager:** keeping
 the filter explicit at the view level (rather than hiding it inside a
 custom manager) makes it obvious, at the point each queryset is built,
-exactly which views are public-safe and which intentionally show a
+exactly which views are public safe and which intentionally show a
 user's own private cats too (`MyCatsView`). A hidden default manager
 risks someone forgetting it's there and accidentally leaking private
 cats through a new view that doesn't know to opt out of it.
