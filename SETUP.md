@@ -1,4 +1,4 @@
-# 🛠️ SETUP.md — Running MoniCat Manor Locally
+# 🛠️ SETUP.md Running MoniCat Manor Locally
 
 This guide takes you from an empty folder to a fully working local copy of
 MoniCat Manor. It assumes basic familiarity with the terminal and Git.
@@ -10,13 +10,13 @@ MoniCat Manor. It assumes basic familiarity with the terminal and Git.
 - **Python 3.9+**
 - **pip**
 - **Git**
-- A free **[Cloudinary](https://cloudinary.com/)** account — the project
+- A free **[Cloudinary](https://cloudinary.com/)** account The project
   uses Cloudinary for image storage in *every* environment (including
   local development), so this is required, not optional. Sign up and
   grab your Cloud Name, API Key, and API Secret from your Cloudinary
   dashboard.
 
-You do **not** need PostgreSQL installed locally — without a `DATABASE_URL`
+You do **not** need PostgreSQL installed locally without a `DATABASE_URL`
 environment variable set, the project automatically falls back to a local
 SQLite database file.
 
@@ -69,7 +69,7 @@ CLOUDINARY_API_SECRET=your-cloudinary-api-secret
 | `DEBUG` | Recommended | Set to `True` locally so you get full error pages instead of the custom 500 page. |
 | `CLOUDINARY_CLOUD_NAME` | **Required** | From your Cloudinary dashboard. |
 | `CLOUDINARY_API_KEY` | **Required** | From your Cloudinary dashboard. |
-| `CLOUDINARY_API_SECRET` | **Required** | From your Cloudinary dashboard. Treat this like a password — never commit it. |
+| `CLOUDINARY_API_SECRET` | **Required** | From your Cloudinary dashboard. Treat this like a password never commit it. |
 | `DATABASE_URL` | Optional | Only needed if you want to connect to a real PostgreSQL database instead of the local SQLite fallback. |
 
 `.env` is already listed in `.gitignore`  never commit it.
