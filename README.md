@@ -13,7 +13,8 @@ earning a "Cat of the Day" spotlight.
 
 **Live site:** https://monicat-manor-8f86a39892eb.herokuapp.com/
 **Repository:** https://github.com/MonicaFeis/monicat-manor
-**Demo video:** [https://github.com/user-attachments/assets/eb7dfd30-3fa1-4687-9325-e1b42d4e5918]
+**Demo video:** 
+[https://github.com/user-attachments/assets/eb7dfd30-3fa1-4687-9325-e1b42d4e5918]
 
 ---
 
