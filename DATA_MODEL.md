@@ -136,7 +136,7 @@ The permanent "paw" favorite.
 guarantees a user can never favorite the same cat twice. The
 `toggle_reaction` view relies on this: it uses `get_or_create()` and,
 if the row already existed, deletes it. A clean toggle with no risk of
-duplicate rows even under rapid double-clicks, since the constraint
+duplicate rows even under rapid double clicks, since the constraint
 would reject a second insert outright.
 
 ---
@@ -149,13 +149,21 @@ The resetting daily interaction that powers Cat of the Day.
 |---|---|---|
 | `cat` | `ForeignKey(Cat, on_delete=CASCADE, related_name='pets')` | |
 | `user` | `ForeignKey(User, on_delete=CASCADE, related_name='daily_pets')` | |
+<<<<<<< HEAD
 | `date` | `DateField(default=timezone.localdate)` | Deliberately a `DateField`, not `DateTimeField` the day is what matters for uniqueness, not the exact time. Using `timezone.localdate` as the default (evaluated per-row at creation) rather than a fixed default keeps every pet correctly attributed to the day it actually happened. |
+=======
+| `date` | `DateField(default=timezone.localdate)` | Deliberately a `DateField`, not `DateTimeField` the day is what matters for uniqueness, not the exact time. Using `timezone.localdate` as the default (evaluated per row at creation) rather than a fixed default keeps every pet correctly attributed to the day it actually happened. |
+>>>>>>> 4f05011137fb0d3bd30d7507fbb40220e0afb6ae
 
 **Meta:** `unique_together = ('cat', 'user', 'date')` Guarantees at
 most one pet per user, per cat, per calendar day. This is what makes
 "already petted today" detection trivial and race condition proof: the
 `pet_cat` view attempts `get_or_create()`, and the database itself
+<<<<<<< HEAD
 rejects a second same-day row rather than the application needing to
+=======
+rejects a second same day row rather than the application needing to
+>>>>>>> 4f05011137fb0d3bd30d7507fbb40220e0afb6ae
 check then insert (which would have a race condition window between
 the check and the insert under concurrent requests).
 
@@ -169,7 +177,7 @@ still preserving a full history if it's ever needed later.
 
 ---
 
-## Cross-cutting design decisions
+## Cross cutting design decisions
 
 **Why `Cat.objects.filter(is_public=True)` appears in almost every
 public facing view, rather than a model level default manager:** keeping

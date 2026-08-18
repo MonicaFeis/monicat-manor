@@ -69,7 +69,11 @@ CLOUDINARY_API_SECRET=your-cloudinary-api-secret
 | `DEBUG` | Recommended | Set to `True` locally so you get full error pages instead of the custom 500 page. |
 | `CLOUDINARY_CLOUD_NAME` | **Required** | From your Cloudinary dashboard. |
 | `CLOUDINARY_API_KEY` | **Required** | From your Cloudinary dashboard. |
+<<<<<<< HEAD    
 | `CLOUDINARY_API_SECRET` | **Required** | From your Cloudinary dashboard. Treat this like a password. Never commit it. |
+=======
+| `CLOUDINARY_API_SECRET` | **Required** | From your Cloudinary dashboard. Treat this like a password never commit it. |
+>>>>>>> 4f05011137fb0d3bd30d7507fbb40220e0afb6ae
 | `DATABASE_URL` | Optional | Only needed if you want to connect to a real PostgreSQL database instead of the local SQLite fallback. |
 
 `.env` is already listed in `.gitignore`  never commit it.
@@ -127,7 +131,7 @@ your prompt) and re-run `pip install -r requirements.txt`.
 
 **Styles look broken / missing**
 Run `python3 manage.py collectstatic` if you're testing with `DEBUG=False`
-locally with `DEBUG=True`, Django serves static files automatically and
+locally with `DEBUG=True`, Django serv  es static files automatically and
 this step isn't needed.
 
 ---
