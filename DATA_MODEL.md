@@ -85,14 +85,14 @@ than relying on view level logic to enforce it.
 
 ## Model: `Cat`
 
-The central model — a single hand-drawn cat portrait.
+The central model is a single hand drawn cat portrait.
 
 | Field | Type | Reasoning |
 |---|---|---|
 | `owner` | `ForeignKey(User, on_delete=CASCADE)` | Every cat belongs to exactly one user. `CASCADE` deletes a user's cats if their account is deleted, avoiding orphaned rows with no owner. |
 | `name` | `CharField(max_length=50)` | Short by design. This is a pet name, not a biography. |
 | `personality` | `TextField(max_length=300)` | Longer free-text field, but still capped to keep cat profile cards a predictable size in the UI. |
-| `coat_color` | `CharField(choices=COAT_COLOR_CHOICES, default='deep_blue')` | Constrained to a fixed palette (`deep_blue`, `periwinkle`, `dusty_violet`, `mint`, `rose`, `honey`, `ink_brown`, `classic`) rather than a free-text or raw hex field, so every cat's color always matches the site's actual brand palette — no visitor can submit an off-brand or invalid color. The `data-value` attributes in the canvas swatch picker (`cat_form.html`) must exactly match these choice keys. |
+| `coat_color` | `CharField(choices=COAT_COLOR_CHOICES, default='deep_blue')` | Constrained to a fixed palette (`deep_blue`, `periwinkle`, `dusty_violet`, `mint`, `rose`, `honey`, `ink_brown`, `classic`) rather than a free text or raw hex field, so every cat's color always matches the site's actual brand palette and no visitor can submit an off-brand or invalid color. The `data-value` attributes in the canvas swatch picker (`cat_form.html`) must exactly match these choice keys. |
 | `drawing_image` | `ImageField(upload_to='cats/')` | Stored via Cloudinary in every environment (see README's Deployment section) since Heroku's filesystem is ephemeral and can't be relied on for persistent media. |
 | `is_public` | `BooleanField(default=True)` | Lets an owner hide a cat from the shared manor/gallery without deleting it a lighter weight action than full deletion, and reversible. |
 | `created_on` / `updated_on` | `DateTimeField(auto_now_add=True)` / `DateTimeField(auto_now=True)` | Standard audit timestamps; `created_on` also drives the model's default ordering. |
@@ -111,14 +111,14 @@ Django's implicit default ordering, so the view also sets an explicit
 | Field | Type | Reasoning |
 |---|---|---|
 | `cat` | `ForeignKey(Cat, on_delete=CASCADE, related_name='comments')` | A comment always belongs to exactly one cat; deleting the cat removes its comments rather than leaving orphaned rows. |
-| `author` | `ForeignKey(User, on_delete=CASCADE, related_name='comments')` | Tracks who wrote it, for ownership-based edit/delete permissions. |
+| `author` | `ForeignKey(User, on_delete=CASCADE, related_name='comments')` | Tracks who wrote it, for ownership based edit/delete permissions. |
 | `body` | `TextField(max_length=500)` | Generous length for a genuine comment, while still bounded. |
 | `created_on` | `DateTimeField(auto_now_add=True)` | Drives ordering and the displayed timestamp. |
 
-**Meta:** `ordering = ['created_on']` — **oldest first**, deliberately
+**Meta:** `ordering = ['created_on']`  **oldest first**, deliberately
 the opposite of `Cat`'s ordering. A comment thread reads naturally in
 chronological order (like a conversation), whereas a gallery of cats
-reads naturally newest-first (like a feed).
+reads naturally newest first (like a feed).
 
 ---
 
@@ -151,7 +151,7 @@ The resetting daily interaction that powers Cat of the Day.
 | `user` | `ForeignKey(User, on_delete=CASCADE, related_name='daily_pets')` | |
 | `date` | `DateField(default=timezone.localdate)` | Deliberately a `DateField`, not `DateTimeField` The day is what matters for uniqueness, not the exact time. Using `timezone.localdate` as the default (evaluated per-row at creation) rather than a fixed default keeps every pet correctly attributed to the day it actually happened. |
 
-**Meta:** `unique_together = ('cat', 'user', 'date')` — guarantees at
+**Meta:** `unique_together = ('cat', 'user', 'date')` guarantees at
 most one pet per user, per cat, per calendar day. This is what makes
 "already petted today" detection trivial and race condition proof: the
 `pet_cat` view attempts `get_or_create()`, and the database itself
@@ -172,7 +172,7 @@ still preserving a full history if it's ever needed later.
 ## Cross-cutting design decisions
 
 **Why `Cat.objects.filter(is_public=True)` appears in almost every
-public facing view, rather than a model-level default manager:** keeping
+public facing view, rather than a model level default manager:** keeping
 the filter explicit at the view level (rather than hiding it inside a
 custom manager) makes it obvious, at the point each query set is built,
 exactly which views are public-safe and which intentionally show a

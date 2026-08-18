@@ -72,7 +72,7 @@ CLOUDINARY_API_SECRET=your-cloudinary-api-secret
 | `CLOUDINARY_API_SECRET` | **Required** | From your Cloudinary dashboard. Treat this like a password — never commit it. |
 | `DATABASE_URL` | Optional | Only needed if you want to connect to a real PostgreSQL database instead of the local SQLite fallback. |
 
-`.env` is already listed in `.gitignore` — never commit it.
+`.env` is already listed in `.gitignore` never commit it.
 
 ## 5. Run migrations
 
@@ -135,4 +135,4 @@ this step isn't needed.
 ## Deploying your own version
 
 See the [Deployment](README.md#deployment) section of the main README for
-Heroku-specific setup and config vars.
+Heroku specific setup and config vars.

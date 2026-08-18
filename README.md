@@ -2,7 +2,7 @@
 
 > Draw a cat. Name it. Give it a personality. Watch it join a shared, illustrated
 > manor with everyone else's cats where it can earn favorites, get petted, and
-> maybe become today's most-loved cat in the house.
+> maybe become today's most loved cat in the house.
 
 MoniCat Manor is a Django full stack web application built for Code Institute's
 Milestone 3 project. Users create custom cat portraits on an in browser canvas,
@@ -48,7 +48,7 @@ cat, the petting/favoriting mechanics, and the Cat of the Day spotlight:
 effort, then share it with a small community of other cat lovers and no drawing
 skill required to participate meaningfully.
 
-**Site owner's goal:** provide a playful, low-friction creative outlet that
+**Site owner's goal:** provide a playful, low friction creative outlet that
 encourages people to return daily (via the Cat of the Day mechanic), while
 keeping the shared space cohesive through a consistent visual theme and
 straightforward moderation tools.
@@ -222,9 +222,9 @@ erDiagram
 **Relationships:**
 - One `User` → many `Cat` (a user can own multiple cats)
 - One `Cat` → many `Comment`; one `User` → many `Comment`
-- `Cat` ↔ `User` many-to-many via `Reaction` (a permanent "favorite" one
+- `Cat` ↔ `User` many to many via `Reaction` (a permanent "favorite" one
   per user per cat, enforced with `unique_together`)
-- `Cat` ↔ `User` many-to-many via `DailyPet` (a *daily* interaction that
+- `Cat` ↔ `User` many to many via `DailyPet` (a *daily* interaction that
   resets every day, one per user per cat per date, also enforced with
   `unique_together`) this is what powers the Cat of the Day feature
 
@@ -375,7 +375,7 @@ Documented as deliberate scope decisions:
   blocking legitimate content that a mentor or assessor enters while
   testing the app, obscuring functionality rather than demonstrating
   it
-- **Password reset flow** Django's built-in URLs exist but no templates
+- **Password reset flow** Django's built in URLs exist but no templates
   were built for them, since it wasn't part of the core user stories
 - **Next-gen format conversion for the static background scene
   illustrations** Cat drawings (the majority of the site's imagery) are
@@ -431,11 +431,11 @@ for the specific issues this testing surfaced and how each was resolved.
 |---|---|---|
 | [W3C HTML Validator (Nu Html Checker)](https://validator.w3.org/) | All templates, checked via live URLs and view-source for login-required pages | ✅ No errors found (see bugs 28–31 for accessibility warnings caught and fixed along the way) |
 | [W3C CSS Validator](https://jigsaw.w3.org/css-validator/) | `style.css` | ✅ No errors found |
-| [JSHint](https://jshint.com/) | `scene.js`, `cat_form.js` (ES version set to ESNext) | ✅ No errors found — default ES5 warnings cleared by setting the correct ES version; one real `undefined variable: bootstrap` warning resolved with a `/* global bootstrap */` annotation |
+| [JSHint](https://jshint.com/) | `scene.js`, `cat_form.js` (ES version set to ESNext) | ✅ No errors found default ES5 warnings cleared by setting the correct ES version; one real `undefined variable: bootstrap` warning resolved with a `/* global bootstrap */` annotation |
 | [CI Python Linter](https://pep8ci.herokuapp.com) | `models.py`, `views.py`, `admin.py`, `apps.py`, `urls.py`, `tests.py`, `cloudinary_extras.py` (both apps), `settings.py`, `config/urls.py` | ✅ No errors found see bugs 38–39 |
-| flake8 (local, `.flake8` config) | All Python files, project-wide | ✅ No errors found (max-line-length 99, migrations/venv excluded) |
+| flake8 (local, `.flake8` config) | All Python files, project-wide | ✅ No errors found (max line length 99, migrations/venv excluded) |
 | Python `manage.py test` | Model and view unit tests (`cats/tests.py`) | ✅ 42/42 passing |
-| Lighthouse | Homepage, login, signup, gallery, my-cats, create-cat (Desktop + Mobile) | ✅ Desktop: Performance 97–100, Accessibility 90–95, Best Practices 100, SEO 91. Mobile (final, after optimization): Homepage 85, Gallery 98, My Cats 97, Create a Cat 97, Accessibility 92–95, Best Practices 100, SEO 91 see bugs 35–37 |
+| Lighthouse | Homepage, login, signup, gallery, my cats, create cat (Desktop + Mobile) | ✅ Desktop: Performance 97–100, Accessibility 90–95, Best Practices 100, SEO 91. Mobile (final, after optimization): Homepage 85, Gallery 98, My Cats 97, Create a Cat 97, Accessibility 92–95, Best Practices 100, SEO 91 see bugs 35–37 |
 
 ### How the test suite (`cats/tests.py`) works
 
@@ -578,14 +578,14 @@ documented in [SETUP.md](SETUP.md).
 ## Credits
 
 - This project was built as a Milestone 3 submission for the
-  [Code Institute](https://codeinstitute.net/) Full Stack Software
+  [Code Institute](https://codeinstitute.net/) Full Stack web
   Development diploma.
 - General coding patterns and problem solving approaches were informed by
   Code Institute's course material and walkthrough projects, official
   Django and Bootstrap documentation, MDN Web Docs, W3Schools, and
   Stack Overflow discussions encountered while debugging.
 - Where a specific, named technique was adapted directly from a
-  source (rather than general knowledge), it's credited inline via a
+  source , it's credited inline via a
   comment above the code, for example, the CSS preload+swap pattern
   in `base.html` cites web.dev's "Defer non-critical CSS" guide.
 - Images (logo and background illustrations) were compressed using
