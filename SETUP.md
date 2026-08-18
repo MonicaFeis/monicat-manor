@@ -69,7 +69,7 @@ CLOUDINARY_API_SECRET=your-cloudinary-api-secret
 | `DEBUG` | Recommended | Set to `True` locally so you get full error pages instead of the custom 500 page. |
 | `CLOUDINARY_CLOUD_NAME` | **Required** | From your Cloudinary dashboard. |
 | `CLOUDINARY_API_KEY` | **Required** | From your Cloudinary dashboard. |
-| `CLOUDINARY_API_SECRET` | **Required** | From your Cloudinary dashboard. Treat this like a password — never commit it. |
+| `CLOUDINARY_API_SECRET` | **Required** | From your Cloudinary dashboard. Treat this like a password  never commit it. |
 | `DATABASE_URL` | Optional | Only needed if you want to connect to a real PostgreSQL database instead of the local SQLite fallback. |
 
 `.env` is already listed in `.gitignore` never commit it.
