@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 
-# Matches the data-value attributes in cat_form.html palette
+# Matches the data value attributes in cat_form.html palette
 COAT_COLOR_CHOICES = [
     ('deep_blue', 'Deep Blue'),
     ('periwinkle', 'Periwinkle'),

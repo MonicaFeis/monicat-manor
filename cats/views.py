@@ -47,7 +47,7 @@ class SceneView(TemplateView):
 
         # .annotate() doesn't reliably preserve the model's default
         # Meta.ordering, which leaves Paginator working against an
-        # unordered queryset (Django warns about this) - cats could then
+        # unordered queryset (Django warns about this) cats could then
         # shift between pages or be skipped/duplicated across page loads.
         # Ordering explicitly here removes that ambiguity.
         all_cats = Cat.objects.filter(is_public=True).annotate(
@@ -67,9 +67,9 @@ class SceneView(TemplateView):
             ).values_list('cat_id', flat=True)
             context['petted_cat_ids'] = list(petted_ids)
 
-            # Needed so the paw button/count render correctly on reopen -
+            # Needed so the paw button/count render correctly on reopen 
             # without this, wrap.dataset.reacted is always "false" on
-            # initial page load even for cats the user already favorited
+            # initial page load even for cats the user already favourited
             reacted_ids = Reaction.objects.filter(
                 user=self.request.user
             ).values_list('cat_id', flat=True)
